@@ -1,0 +1,140 @@
+.navbar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-card-border);
+  padding: 15px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+}
+
+.navbar-left {
+  flex: 0 0 auto;
+}
+
+.navbar-logo {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 24px;
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 2px;
+  transition: all 0.3s;
+}
+
+.navbar-logo:hover {
+  color: var(--color-primary-hover);
+  transform: scale(1.05);
+}
+
+.navbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+
+.nav-link {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: var(--color-primary);
+  background: var(--color-secondary);
+}
+
+.nav-link:active {
+  transform: scale(0.98);
+}
+
+.navbar-right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.role-badge {
+  background: rgba(var(--color-primary-rgb, 33, 128, 141), 0.15);
+  color: var(--color-primary);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-logout {
+  background: var(--color-error);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.btn-logout:hover {
+  background: var(--color-error);
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.btn-logout:active {
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar-container {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .navbar-center {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .nav-link {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  .user-info {
+    font-size: 12px;
+  }
+}

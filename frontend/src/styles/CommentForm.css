@@ -1,0 +1,118 @@
+/* frontend/src/styles/CommentForm.css */
+
+.comment-form-container {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-card-border);
+  border-radius: 10px;
+  animation: slideUp 0.3s ease-out;
+}
+
+.comment-form-title {
+  margin: 0 0 15px 0;
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.comment-form-error {
+  background: rgba(var(--color-error-rgb), 0.1);
+  color: var(--color-error);
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  border-left: 4px solid var(--color-error);
+}
+
+.comment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comment-textarea {
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  transition: all 0.3s;
+}
+
+.comment-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.comment-textarea::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.textarea-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.char-count {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.btn-submit-comment {
+  padding: 10px 20px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-submit-comment:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+}
+
+.btn-submit-comment:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .comment-form-container {
+    padding: 15px;
+  }
+
+  .comment-textarea {
+    min-height: 100px;
+  }
+}

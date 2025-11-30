@@ -1,0 +1,100 @@
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.auth-card {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-card h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #1a1a1a;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #666666 !important;  /* ← CUSTOM χρώμα label */
+}
+
+.form-group input {
+  width: 100% !important;
+  padding: 10px 12px !important;
+  border: 2px solid #e0e0e0 !important;  /* ← CUSTOM χρώμα border */
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  background: #f9f9f9 !important;  /* ← CUSTOM χρώμα input background */
+  color: #333333 !important;  /* ← CUSTOM χρώμα input text */
+  transition: all 0.3s !important;
+  font-family: inherit !important;
+}
+
+.form-group input:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+  background: #ffffff !important;
+}
+
+.auth-card button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: opacity 0.3s !important;
+}
+
+.auth-card button:hover {
+  opacity: 0.9 !important;
+}
+
+.auth-card button:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+
+.error-message {
+  background: #fee !important;
+  color: #c00 !important;
+  padding: 12px !important;
+  border-radius: 6px !important;
+  margin-bottom: 20px !important;
+  text-align: center !important;
+  border-left: 4px solid #c00 !important;
+}
+
+.auth-card p {
+  text-align: center;
+  margin-top: 20px;
+  color: #999999;
+}
+
+.auth-card a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-card a:hover {
+  text-decoration: underline;
+}
