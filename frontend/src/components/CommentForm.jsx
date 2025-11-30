@@ -26,7 +26,7 @@ export default function CommentForm({ taskId, token, onCommentAdded }) {
 
     try {
       setLoading(true);
-      await api.post(`/api/tasks/${taskId}/comments`, {
+      await api.post(`/api/comments/task/${taskId}`, {
         content: content.trim()
       }, {
         params: { token }

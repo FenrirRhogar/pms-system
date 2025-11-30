@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authAPI } from '../api';
+import api, { authAPI } from '../api';
 import '../styles/AuthPage.css';
 
 export default function LoginPage({ setIsAuthenticated, setUserRole, setLeaderTeamId }) {
@@ -37,24 +37,14 @@ export default function LoginPage({ setIsAuthenticated, setUserRole, setLeaderTe
       if (user.role === 'ADMIN') {
         navigate('/admin');
       } else if (user.role === 'TEAM_LEADER') {
-        // Get team id for team leader
+        // Fetch team ID for the leader
         try {
-          const teamResponse = await fetch(
-            `http://localhost:8000/api/users/me/team?token=${token}`
-          );
-          
-          if (teamResponse.ok) {
-            const teamData = await teamResponse.json();
-            setLeaderTeamId(teamData.id);
-            localStorage.setItem('leaderTeamId', teamData.id);
-            navigate(`/teams/${teamData.id}`);
-          } else {
-            console.error('Failed to fetch team');
-            navigate('/my-teams');
-          }
+            const teamResponse = await api.get('/api/teams/mine/leader');
+            if (teamResponse.data) {
+                localStorage.setItem('leaderTeamId', teamResponse.data.id);
+            }
         } catch (err) {
-          console.error('Error fetching team:', err);
-          navigate('/my-teams');
+            console.error('Failed to fetch leader team ID', err);
         }
       } else if (user.role === 'MEMBER') {
         navigate('/my-teams');

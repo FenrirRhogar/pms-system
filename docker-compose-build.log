@@ -1,0 +1,112 @@
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.14kB done
+#1 DONE 0.0s
+
+#2 [frontend internal] load build definition from Dockerfile
+#2 transferring dockerfile: 318B done
+#2 DONE 0.0s
+
+#3 [backend internal] load build definition from Dockerfile
+#3 transferring dockerfile: 255B done
+#3 DONE 0.0s
+
+#4 [backend internal] load metadata for docker.io/library/python:3.11-slim
+#4 DONE 1.6s
+
+#5 [frontend internal] load metadata for docker.io/library/node:18-alpine
+#5 DONE 1.8s
+
+#6 [backend internal] load .dockerignore
+#6 transferring context: 2B done
+#6 DONE 0.0s
+
+#7 [backend 1/5] FROM docker.io/library/python:3.11-slim@sha256:193fdd0bbcb3d2ae612bd6cc3548d2f7c78d65b549fcaa8af75624c47474444d
+#7 DONE 0.0s
+
+#8 [backend internal] load build context
+#8 transferring context: 285B done
+#8 DONE 0.0s
+
+#9 [backend 3/5] COPY requirements.txt .
+#9 CACHED
+
+#10 [backend 2/5] WORKDIR /app
+#10 CACHED
+
+#11 [backend 4/5] RUN pip install --no-cache-dir -r requirements.txt
+#11 CACHED
+
+#12 [backend 5/5] COPY . .
+#12 CACHED
+
+#13 [backend] exporting to image
+#13 exporting layers done
+#13 writing image sha256:5b782d7ef72cc568b8907a0a59c322b597908439ffa86a6c123074e67221ab39 done
+#13 naming to docker.io/library/pms-project-backend done
+#13 DONE 0.0s
+
+#14 [backend] resolving provenance for metadata file
+#14 DONE 0.0s
+
+#15 [frontend internal] load .dockerignore
+#15 transferring context: 2B done
+#15 DONE 0.0s
+
+#16 [frontend 1/6] FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+#16 DONE 0.0s
+
+#17 [frontend internal] load build context
+#17 transferring context: 1.95kB done
+#17 DONE 0.0s
+
+#18 [frontend 3/6] COPY package.json package-lock.json ./
+#18 CACHED
+
+#19 [frontend 4/6] RUN npm install
+#19 CACHED
+
+#20 [frontend 2/6] WORKDIR /app
+#20 CACHED
+
+#21 [frontend 5/6] COPY . .
+#21 CACHED
+
+#22 [frontend 6/6] RUN npm run build
+#22 CACHED
+
+#23 [frontend] exporting to image
+#23 exporting layers done
+#23 writing image sha256:92530f0d9bcd16b40931418bb57c6da00c93a2feb34d6974973a2b884fb9fb17 done
+#23 naming to docker.io/library/pms-project-frontend done
+#23 DONE 0.0s
+
+#24 [frontend] resolving provenance for metadata file
+#24 DONE 0.0s
+Attaching to backend-1, frontend-1
+frontend-1  | 
+frontend-1  | > frontend@0.1.0 start
+frontend-1  | > react-scripts start
+frontend-1  | 
+frontend-1  | Starting the development server...
+frontend-1  | 
+frontend-1  | Compiled successfully!
+frontend-1  | 
+frontend-1  | You can now view frontend in the browser.
+frontend-1  | 
+frontend-1  |   Local:            http://localhost:3000
+frontend-1  |   On Your Network:  http://172.21.0.3:3000
+frontend-1  | 
+frontend-1  | Note that the development build is not optimized.
+frontend-1  | To create a production build, use npm run build.
+frontend-1  | 
+frontend-1  | webpack compiled successfully
+backend-1   | INFO:     172.21.0.1:43712 - "GET /api/teams/506c1001-a4b6-4312-95d1-c7c93ee88071/tasks?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMzU4OWQ3ZC02NjlhLTQxN2ItODQ3Ny00MjY4NjM4Njg1MTQiLCJlbWFpbCI6ImxlYWRlckBleGFtcGxlLmNvbSIsImV4cCI6MTc2NDUxMjA5Mn0.LLyX7gMwq7DNttgI-TFVXQy7kweAW4L6-c8xuqI6sik HTTP/1.1" 401 Unauthorized
+backend-1   | INFO:     172.21.0.1:43726 - "GET /api/teams/506c1001-a4b6-4312-95d1-c7c93ee88071/tasks?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMzU4OWQ3ZC02NjlhLTQxN2ItODQ3Ny00MjY4NjM4Njg1MTQiLCJlbWFpbCI6ImxlYWRlckBleGFtcGxlLmNvbSIsImV4cCI6MTc2NDUxMjA5Mn0.LLyX7gMwq7DNttgI-TFVXQy7kweAW4L6-c8xuqI6sik HTTP/1.1" 401 Unauthorized
+backend-1   | INFO:     172.21.0.1:54178 - "OPTIONS /api/auth/login HTTP/1.1" 200 OK
+backend-1   | INFO:     172.21.0.1:54178 - "POST /api/auth/login HTTP/1.1" 200 OK
+backend-1   | INFO:     172.21.0.1:54178 - "GET /api/users/me/teams?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMzU4OWQ3ZC02NjlhLTQxN2ItODQ3Ny00MjY4NjM4Njg1MTQiLCJlbWFpbCI6ImxlYWRlckBleGFtcGxlLmNvbSIsImV4cCI6MTc2NDU0NDM0MH0.mF255E4ziELX2eDLUJpd5SSCoppFEwROzMo5WwmycoI HTTP/1.1" 200 OK
+backend-1   | INFO:     172.21.0.1:54192 - "GET /api/users/me/teams?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMzU4OWQ3ZC02NjlhLTQxN2ItODQ3Ny00MjY4NjM4Njg1MTQiLCJlbWFpbCI6ImxlYWRlckBleGFtcGxlLmNvbSIsImV4cCI6MTc2NDU0NDM0MH0.mF255E4ziELX2eDLUJpd5SSCoppFEwROzMo5WwmycoI HTTP/1.1" 200 OK
+backend-1   | INFO:     172.21.0.1:54192 - "GET /api/users/me/teams?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMzU4OWQ3ZC02NjlhLTQxN2ItODQ3Ny00MjY4NjM4Njg1MTQiLCJlbWFpbCI6ImxlYWRlckBleGFtcGxlLmNvbSIsImV4cCI6MTc2NDU0NDM0MH0.mF255E4ziELX2eDLUJpd5SSCoppFEwROzMo5WwmycoI HTTP/1.1" 200 OK
+backend-1   | INFO:     172.21.0.1:54178 - "GET /api/users/me/teams?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMzU4OWQ3ZC02NjlhLTQxN2ItODQ3Ny00MjY4NjM4Njg1MTQiLCJlbWFpbCI6ImxlYWRlckBleGFtcGxlLmNvbSIsImV4cCI6MTc2NDU0NDM0MH0.mF255E4ziELX2eDLUJpd5SSCoppFEwROzMo5WwmycoI HTTP/1.1" 200 OK
+backend-1   | INFO:     172.21.0.1:54192 - "GET /api/teams/506c1001-a4b6-4312-95d1-c7c93ee88071/tasks?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMzU4OWQ3ZC02NjlhLTQxN2ItODQ3Ny00MjY4NjM4Njg1MTQiLCJlbWFpbCI6ImxlYWRlckBleGFtcGxlLmNvbSIsImV4cCI6MTc2NDU0NDM0MH0.mF255E4ziELX2eDLUJpd5SSCoppFEwROzMo5WwmycoI HTTP/1.1" 200 OK
+backend-1   | INFO:     172.21.0.1:54178 - "GET /api/teams/506c1001-a4b6-4312-95d1-c7c93ee88071/tasks?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjMzU4OWQ3ZC02NjlhLTQxN2ItODQ3Ny00MjY4NjM4Njg1MTQiLCJlbWFpbCI6ImxlYWRlckBleGFtcGxlLmNvbSIsImV4cCI6MTc2NDU0NDM0MH0.mF255E4ziELX2eDLUJpd5SSCoppFEwROzMo5WwmycoI HTTP/1.1" 200 OK

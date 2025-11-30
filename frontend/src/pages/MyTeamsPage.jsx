@@ -19,7 +19,7 @@ export default function MyTeamsPage() {
   const fetchTeams = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/users/me/teams', {
+      const response = await api.get('/api/teams/mine/member', {
         params: { token },
       });
       setTeams(response.data);

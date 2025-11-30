@@ -31,7 +31,7 @@ export default function TaskDetailsPage() {
   const fetchTask = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/teams/${teamId}/tasks`, {
+      const response = await api.get(`/api/tasks/team/${teamId}`, {
         params: { token },
       });
 

@@ -20,7 +20,7 @@ export default function CommentsList({ taskId, token }) {
   const fetchComments = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/tasks/${taskId}/comments`, {
+      const response = await api.get(`/api/comments/task/${taskId}`, {
         params: { token },
       });
       setComments(response.data);

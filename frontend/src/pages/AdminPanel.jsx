@@ -39,7 +39,7 @@ export default function AdminPanel() {
       // Ζήτησε όλα τα δεδομένα παράλληλα
       const [usersRes, teamsRes] = await Promise.all([
         api.get('/api/users', { params: { token } }),
-        api.get('/api/admin/teams', { params: { token } })
+        api.get('/api/teams/admin', { params: { token } })
       ]);
 
       setUsers(usersRes.data);
@@ -49,7 +49,7 @@ export default function AdminPanel() {
       let tasks = [];
       for (const team of teamsRes.data) {
         try {
-          const tasksRes = await api.get(`/api/teams/${team.id}/tasks`, {
+api.get(`/api/tasks/team/${team.id}`, {
             params: { token },
           });
 
@@ -104,7 +104,7 @@ export default function AdminPanel() {
   const fetchTeams = async () => {
     try {
       setTabLoading(true);
-      const response = await api.get('/api/admin/teams', {
+      const response = await api.get('/api/teams/admin', {
         params: { token },
       });
       setTeams(response.data);
@@ -122,7 +122,7 @@ export default function AdminPanel() {
       let tasks = [];
 
       for (const team of teams) {
-        const tasksResponse = await api.get(`/api/teams/${team.id}/tasks`, {
+        const tasksResponse = await api.get(`/api/tasks/team/${team.id}`, {
           params: { token },
         });
 

@@ -52,7 +52,7 @@ export default function TasksPage() {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/teams/${teamId}/tasks`, {
+      const response = await api.get(`/api/tasks/team/${teamId}`, {
         params: { token },
       });
       setTasks(response.data);
@@ -77,7 +77,7 @@ export default function TasksPage() {
     }
 
     try {
-      await api.post(`/api/teams/${teamId}/tasks`, {
+      await api.post(`/api/tasks/team/${teamId}`, {
         title: formData.title,
         description: formData.description,
         priority: formData.priority,

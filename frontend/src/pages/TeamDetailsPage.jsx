@@ -50,7 +50,7 @@ export default function TeamDetailsPage() {
 
   const fetchAvailableMembers = async () => {
     try {
-      const response = await api.get('/api/teams/members/available');
+      const response = await api.get('/api/teams/available-members');
       setAvailableMembers(response.data);
     } catch (err) {
       console.error('Failed to fetch available members', err);
@@ -59,7 +59,7 @@ export default function TeamDetailsPage() {
 
   const fetchTasks = async () => {
     try {
-      const response = await api.get(`/api/teams/${teamId}/tasks`, {
+      const response = await api.get(`/api/tasks/team/${teamId}`, {
         params: { token },
       });
       setTasks(response.data);

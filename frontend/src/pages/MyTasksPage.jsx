@@ -23,14 +23,14 @@ export default function MyTasksPage() {
     try {
       setLoading(true);
       // Fetch all teams of the member
-      const teamsResponse = await api.get('/api/users/me/teams', {
+      const teamsResponse = await api.get('/api/teams/mine/member', {
         params: { token },
       });
 
       // Fetch tasks from each team
       let allTasks = [];
       for (const team of teamsResponse.data) {
-        const tasksResponse = await api.get(`/api/teams/${team.id}/tasks`, {
+        const tasksResponse = await api.get(`/api/tasks/team/${team.id}`, {
           params: { token },
         });
         
