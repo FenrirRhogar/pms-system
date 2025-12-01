@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
 import '../styles/TeamDetailsPage.css';
 
@@ -28,9 +28,9 @@ export default function TeamDetailsPage() {
     fetchTeamDetails();
     fetchAvailableMembers();
     fetchTasks();
-  }, [teamId]);
+  }, [fetchTeamDetails, fetchAvailableMembers, fetchTasks]);
 
-  const fetchTeamDetails = async () => {
+  const fetchTeamDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get(`/api/teams/${teamId}`, {
@@ -46,18 +46,18 @@ export default function TeamDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [teamId, token]);
 
-  const fetchAvailableMembers = async () => {
+  const fetchAvailableMembers = useCallback(async () => {
     try {
       const response = await api.get('/api/teams/available-members');
       setAvailableMembers(response.data);
     } catch (err) {
       console.error('Failed to fetch available members', err);
     }
-  };
+  }, []);
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       const response = await api.get(`/api/tasks/team/${teamId}`, {
         params: { token },
@@ -66,7 +66,7 @@ export default function TeamDetailsPage() {
     } catch (err) {
       console.error('Failed to fetch tasks', err);
     }
-  };
+  }, [teamId, token]);
 
   const filteredAvailableMembers = team
     ? availableMembers.filter(

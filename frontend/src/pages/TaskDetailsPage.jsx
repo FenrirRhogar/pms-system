@@ -1,6 +1,6 @@
 // frontend/src/pages/TaskDetailsPage.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
 import CommentsList from '../components/CommentsList';
@@ -26,9 +26,9 @@ export default function TaskDetailsPage() {
 
   useEffect(() => {
     fetchTask();
-  }, [taskId]);
+  }, [fetchTask]);
 
-  const fetchTask = async () => {
+  const fetchTask = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get(`/api/tasks/team/${teamId}`, {
@@ -54,7 +54,7 @@ export default function TaskDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [teamId, taskId, token]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;

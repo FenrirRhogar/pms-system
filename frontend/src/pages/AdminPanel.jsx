@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import '../styles/AdminPanel.css';
@@ -29,10 +29,10 @@ export default function AdminPanel() {
   useEffect(() => {
     // Φόρτωσε ΟΛΑ τα δεδομένα αμέσως κατά την εκκίνηση
     fetchAllData();
-  }, []);
+  }, [fetchAllData]);
 
   // Φόρτωσε όλα τα δεδομένα παράλληλα
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -49,7 +49,7 @@ export default function AdminPanel() {
       let tasks = [];
       for (const team of teamsRes.data) {
         try {
-api.get(`/api/tasks/team/${team.id}`, {
+          const tasksRes = await api.get(`/api/tasks/team/${team.id}`, {
             params: { token },
           });
 
@@ -74,7 +74,7 @@ api.get(`/api/tasks/team/${team.id}`, {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (activeTab === 'users') {
@@ -84,9 +84,9 @@ api.get(`/api/tasks/team/${team.id}`, {
     } else if (activeTab === 'tasks') {
       fetchAllTasks();
     }
-  }, [activeTab]);
+  }, [activeTab, fetchAllTasks, fetchTeams, fetchUsers]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setTabLoading(true);
       const response = await api.get('/api/users', {
@@ -99,9 +99,9 @@ api.get(`/api/tasks/team/${team.id}`, {
     } finally {
       setTabLoading(false);
     }
-  };
+  }, [token]);
 
-  const fetchTeams = async () => {
+  const fetchTeams = useCallback(async () => {
     try {
       setTabLoading(true);
       const response = await api.get('/api/teams/admin', {
@@ -114,9 +114,9 @@ api.get(`/api/tasks/team/${team.id}`, {
     } finally {
       setTabLoading(false);
     }
-  };
+  }, [token]);
 
-  const fetchAllTasks = async () => {
+  const fetchAllTasks = useCallback(async () => {
     try {
       setTabLoading(true);
       let tasks = [];
@@ -144,7 +144,7 @@ api.get(`/api/tasks/team/${team.id}`, {
     } finally {
       setTabLoading(false);
     }
-  };
+  }, [teams, token]);
 
   // ... υπόλοιπος κώδικας παραμένει ίδιος ...
 

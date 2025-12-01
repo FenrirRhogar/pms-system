@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import '../styles/ProfilePage.css';
 
 export default function ProfilePage() {
-  const navigate = useNavigate();
+
   const token = localStorage.getItem('access_token');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState({});
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get('/api/users/me', {
@@ -28,11 +28,11 @@ export default function ProfilePage() {
         email: response.data.email,
       });
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load profile');
+      console.error(err.response?.data?.detail || 'Failed to load profile');
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;

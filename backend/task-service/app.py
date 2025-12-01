@@ -271,6 +271,11 @@ async def update_task(task_id: str, task_data: TaskUpdate, token: str = None):
             created_at=updated_task["created_at"],
             updated_at=updated_task["updated_at"]
         )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating task: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to update task")
 
 
 @app.delete("/api/tasks/{task_id}")
@@ -306,6 +311,11 @@ async def delete_task(task_id: str, token: str = None):
         supabase.table("tasks").delete().eq("id", task_id).execute()
 
         return {"message": "Task deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting task: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete task")
 
 # ============ COMMENTS ENDPOINTS ============
 

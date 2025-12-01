@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api';
 import CommentsList from '../components/CommentsList';
@@ -35,9 +35,9 @@ export default function TasksPage() {
   useEffect(() => {
     fetchTeamDetails();
     fetchTasks();
-  }, [teamId]);
+  }, [fetchTeamDetails, fetchTasks]);
 
-  const fetchTeamDetails = async () => {
+  const fetchTeamDetails = useCallback(async () => {
     try {
       const response = await api.get(`/api/teams/${teamId}`, {
         params: { token },
@@ -47,9 +47,9 @@ export default function TasksPage() {
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to load team');
     }
-  };
+  }, [teamId, token]);
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get(`/api/tasks/team/${teamId}`, {
@@ -62,7 +62,7 @@ export default function TasksPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [teamId, token]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;

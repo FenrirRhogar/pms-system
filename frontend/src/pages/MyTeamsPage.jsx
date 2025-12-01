@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import '../styles/MyTeamsPage.css';
@@ -14,9 +14,9 @@ export default function MyTeamsPage() {
 
   useEffect(() => {
     fetchTeams();
-  }, []);
+  }, [fetchTeams]);
 
-  const fetchTeams = async () => {
+  const fetchTeams = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get('/api/teams/mine/member', {
@@ -29,7 +29,7 @@ export default function MyTeamsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   if (loading) return <div className="loading">Loading your teams...</div>;
 

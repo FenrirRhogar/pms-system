@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api';
 import '../styles/MyTasksPage.css';
 
@@ -15,11 +15,11 @@ export default function MyTasksPage() {
 
   useEffect(() => {
     fetchMyTasks();
-  }, []);
+  }, [fetchMyTasks]);
 
   const navigate = useNavigate();
 
-  const fetchMyTasks = async () => {
+  const fetchMyTasks = useCallback(async () => {
     try {
       setLoading(true);
       // Fetch all teams of the member
@@ -59,7 +59,7 @@ export default function MyTasksPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, user.id]);
 
   const handleUpdateTaskStatus = async (taskId, newStatus) => {
     try {

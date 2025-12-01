@@ -1,6 +1,6 @@
 // frontend/src/components/CommentsList.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api';
 import '../styles/CommentsList.css';
 
@@ -15,9 +15,9 @@ export default function CommentsList({ taskId, token }) {
 
   useEffect(() => {
     fetchComments();
-  }, [taskId]);
+  }, [fetchComments]);
 
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get(`/api/comments/task/${taskId}`, {
@@ -30,7 +30,7 @@ export default function CommentsList({ taskId, token }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [taskId, token]);
 
   const handleEditComment = (commentId, content) => {
     setEditingCommentId(commentId);
