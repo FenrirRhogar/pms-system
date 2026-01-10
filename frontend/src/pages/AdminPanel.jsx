@@ -226,7 +226,10 @@ export default function AdminPanel() {
     }
   };
 
-  const teamLeaders = users.filter(user => user.role === 'TEAM_LEADER');
+  const occupiedLeaderIds = new Set(teams.map(t => t.leader_id));
+  const availableTeamLeaders = users.filter(user => 
+    user.role === 'TEAM_LEADER' && !occupiedLeaderIds.has(user.id)
+  );
 
   const filteredTasks = allTasks.filter(task => {
     const teamMatch = filterTeamId === 'ALL' || task.team_id === filterTeamId;
@@ -422,7 +425,7 @@ const handleClearFilters = () => {
                     required
                   >
                     <option value="">-- Select a leader --</option>
-                    {teamLeaders.map((user) => (
+                    {availableTeamLeaders.map((user) => (
                       <option key={user.id} value={user.id}>
                         {user.username} ({user.email})
                       </option>
