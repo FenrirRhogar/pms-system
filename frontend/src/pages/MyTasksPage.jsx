@@ -1,10 +1,10 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api';
 import '../styles/MyTasksPage.css';
 
 export default function MyTasksPage() {
-  const token = localStorage.getItem('access_token');
+
   const user = JSON.parse(localStorage.getItem('user'));
 
   const [tasks, setTasks] = useState([]);
@@ -13,36 +13,23 @@ export default function MyTasksPage() {
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [filterPriority, setFilterPriority] = useState('ALL');
 
-  useEffect(() => {
-    fetchMyTasks();
-  }, [fetchMyTasks]);
-
   const navigate = useNavigate();
 
   const fetchMyTasks = useCallback(async () => {
     try {
       setLoading(true);
       // Fetch all teams of the member
-      const teamsResponse = await api.get('/api/teams/mine/member', {
-        params: { token },
-      });
+      const teamsResponse = await api.get('/api/teams/mine/member');
 
       // Fetch tasks from each team
       let allTasks = [];
       for (const team of teamsResponse.data) {
-        const tasksResponse = await api.get(`/api/tasks/team/${team.id}`, {
-          params: { token },
-        });
-        
-        // Filter tasks assigned to current user
-        const assignedTasks = tasksResponse.data.filter(
-          task => task.assigned_to === user.id
-        );
+        const tasksResponse = await api.get(`/api/tasks/team/${team.id}`);
         
         // Add team info to each task
         allTasks = [
           ...allTasks,
-          ...assignedTasks.map(task => ({
+          ...tasksResponse.data.map(task => ({
             ...task,
             team_name: team.name,
             team_id: team.id
@@ -59,14 +46,16 @@ export default function MyTasksPage() {
     } finally {
       setLoading(false);
     }
-  }, [token, user.id]);
+  }, [user.id]);
+
+  useEffect(() => {
+    fetchMyTasks();
+  }, [fetchMyTasks]);
 
   const handleUpdateTaskStatus = async (taskId, newStatus) => {
     try {
       await api.patch(`/api/tasks/${taskId}`, {
         status: newStatus
-      }, {
-        params: { token }
       });
       fetchMyTasks();
     } catch (err) {
@@ -183,8 +172,14 @@ export default function MyTasksPage() {
             <div key={task.id} className="task-item">
               <div className="task-item-header">
                 <div className="task-title-section">
-                  <h3>{task.title}</h3>
-                  <span className="team-badge">{task.team_name}</span>
+                  <h3>
+                    <Link to={`/teams/${task.team_id}/tasks/${task.id}`} className="task-title-link">
+                      {task.title}
+                    </Link>
+                  </h3>
+                  <Link to={`/teams/${task.team_id}`} className="team-badge-link">
+                    <span className="team-badge">{task.team_name}</span>
+                  </Link>
                 </div>
                 <div className="task-badges">
                   <span

@@ -37,14 +37,19 @@ export default function LoginPage({ setIsAuthenticated, setUserRole, setLeaderTe
       if (user.role === 'ADMIN') {
         navigate('/admin');
       } else if (user.role === 'TEAM_LEADER') {
-        // Fetch team ID for the leader
+        // Fetch team ID for the leader and then navigate
         try {
             const teamResponse = await api.get('/api/teams/mine/leader');
-            if (teamResponse.data) {
-                localStorage.setItem('leaderTeamId', teamResponse.data.id);
+            if (teamResponse.data && teamResponse.data.id) {
+                const teamId = teamResponse.data.id;
+                setLeaderTeamId(teamId);
+                navigate(`/teams/${teamId}`);
+            } else {
+                navigate('/my-teams');
             }
         } catch (err) {
             console.error('Failed to fetch leader team ID', err);
+            navigate('/my-teams');
         }
       } else if (user.role === 'MEMBER') {
         navigate('/my-teams');

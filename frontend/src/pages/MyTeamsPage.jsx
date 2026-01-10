@@ -5,23 +5,17 @@ import '../styles/MyTeamsPage.css';
 
 export default function MyTeamsPage() {
   const navigate = useNavigate();
-  const token = localStorage.getItem('access_token');
+
   const user = JSON.parse(localStorage.getItem('user'));
   
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchTeams();
-  }, [fetchTeams]);
-
   const fetchTeams = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/teams/mine/member', {
-        params: { token },
-      });
+      const response = await api.get('/api/teams/mine/member');
       setTeams(response.data);
       setError('');
     } catch (err) {
@@ -29,7 +23,11 @@ export default function MyTeamsPage() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
+
+  useEffect(() => {
+    fetchTeams();
+  }, [fetchTeams]);
 
   if (loading) return <div className="loading">Loading your teams...</div>;
 

@@ -30,6 +30,12 @@ supabase: Client = create_client(
     os.getenv("SUPABASE_KEY")
 )
 
+# Supabase Admin Client (for RLS bypass)
+supabase_admin: Client = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+)
+
 JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key")
 ALGORITHM = "HS256"
 
@@ -51,15 +57,20 @@ def verify_token(token: str):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 async def get_user(user_id: str) -> UserResponse:
+    if not user_id:
+        return None
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(f"http://user-service:8080/api/users/{user_id}")
+            if response.status_code == 404:
+                return None
             response.raise_for_status()
             return UserResponse(**response.json())
         except httpx.HTTPStatusError as e:
             raise HTTPException(status_code=e.response.status_code, detail=f"Error getting user {user_id} from user-service: {e.response.text}")
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"An unexpected error occurred while fetching user {user_id}: {str(e)}")
+            print(f"An unexpected error occurred while fetching user {user_id}: {str(e)}")
+            return None
 
 async def get_team(team_id: str, token: str) -> dict:
     async with httpx.AsyncClient() as client:
@@ -97,14 +108,12 @@ async def create_task(team_id: str, task_data: TaskCreate, token: str = None):
         team = await get_team(team_id, token)
         user = await get_user(user_id)
 
-        user_role = user.role
-        if user_role not in ["ADMIN", "TEAM_LEADER"] or (
-            user_role == "TEAM_LEADER" and team["leader"]["id"] != user_id
-        ):
-            raise HTTPException(status_code=403, detail="Not allowed to create tasks")
+        user_role = user.role.upper()
+        if user_role != "TEAM_LEADER" or team["leader"]["id"] != user_id:
+            raise HTTPException(status_code=403, detail="Only team leader can create tasks for their team.")
 
         # Δημιουργία εργασίας
-        task_insert = supabase.table("tasks").insert({
+        task_insert = supabase_admin.table("tasks").insert({
             "team_id": team_id,
             "title": task_data.title,
             "description": task_data.description,
@@ -153,15 +162,23 @@ async def create_task(team_id: str, task_data: TaskCreate, token: str = None):
 @app.get("/api/tasks/team/{team_id}")
 async def get_team_tasks(team_id: str, token: str = None):
     """
-    Επιστρέφει όλες τις εργασίες της ομάδας.
+    Returns tasks for a team.
+    - Team leaders and admins see all tasks.
+    - Members only see tasks assigned to them.
     """
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
-    verify_token(token)
+    user_id = verify_token(token)
+    user = await get_user(user_id)
 
     try:
-        tasks_resp = supabase.table("tasks").select("*").eq("team_id", team_id).order("created_at", desc=True).execute()
+        query = supabase_admin.table("tasks").select("*").eq("team_id", team_id)
+
+        if user.role.upper() == "MEMBER":
+            query = query.eq("assigned_to", user_id)
+
+        tasks_resp = query.order("created_at", desc=True).execute()
 
         tasks = []
         for task in (tasks_resp.data or []):
@@ -170,6 +187,24 @@ async def get_team_tasks(team_id: str, token: str = None):
             assigned_to_user = None
             if task["assigned_to"]:
                 assigned_to_user = await get_user(task["assigned_to"])
+
+            # Fetch comments for this task
+            comments_resp = supabase_admin.table("task_comments").select("*, user:users(*)").eq("task_id", task["id"]).order("created_at", desc=False).execute()
+            comments = []
+            for c in (comments_resp.data or []):
+                user_data = None
+                if c.get("user"):
+                    user_data = UserResponse(**c["user"])
+                
+                comments.append(CommentResponse(
+                    id=c["id"],
+                    task_id=c["task_id"],
+                    user_id=c["user_id"],
+                    content=c["content"],
+                    created_at=c["created_at"],
+                    updated_at=c["updated_at"],
+                    user=user_data
+                ))
 
             tasks.append({
                 "id": task["id"],
@@ -184,13 +219,76 @@ async def get_team_tasks(team_id: str, token: str = None):
                 "assigned_to_user": assigned_to_user,
                 "due_date": task["due_date"],
                 "created_at": task["created_at"],
-                "updated_at": task["updated_at"]
+                "updated_at": task["updated_at"],
+                "comments": comments
             })
 
         return tasks
     except Exception as e:
         print(f"Error getting tasks: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get tasks")
+
+@app.get("/api/tasks/{task_id}/details", response_model=TaskDetailResponse)
+async def get_task_details(task_id: str, token: str = None):
+    """
+    Get detailed information about a single task, including comments.
+    """
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    verify_token(token)
+
+    try:
+        # Fetch task
+        task_resp = supabase_admin.table("tasks").select("*").eq("id", task_id).execute()
+        if not task_resp.data:
+            raise HTTPException(status_code=404, detail="Task not found")
+        task = task_resp.data[0]
+
+        # Fetch users
+        created_by_user = await get_user(task["created_by"])
+        assigned_to_user = await get_user(task["assigned_to"]) if task["assigned_to"] else None
+        
+        # Fetch comments
+        comments_resp = supabase_admin.table("task_comments").select("*, user:users(*)").eq("task_id", task_id).order("created_at", desc=True).execute()
+        comments = []
+        for c in (comments_resp.data or []):
+            user_data = None
+            if c.get("user"):
+                user_data = UserResponse(**c["user"])
+            
+            comments.append(CommentResponse(
+                id=c["id"],
+                task_id=c["task_id"],
+                user_id=c["user_id"],
+                content=c["content"],
+                created_at=c["created_at"],
+                updated_at=c["updated_at"],
+                user=user_data
+            ))
+
+
+        return TaskDetailResponse(
+            id=task["id"],
+            team_id=task["team_id"],
+            title=task["title"],
+            description=task["description"],
+            status=task["status"],
+            priority=task["priority"],
+            created_by=task["created_by"],
+            created_by_user=created_by_user,
+            assigned_to=task["assigned_to"],
+            assigned_to_user=assigned_to_user,
+            due_date=task["due_date"],
+            created_at=task["created_at"],
+            updated_at=task["updated_at"],
+            comments=comments
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching task details: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch task details")
 
 
 @app.patch("/api/tasks/{task_id}", response_model=TaskDetailResponse)
@@ -206,7 +304,7 @@ async def update_task(task_id: str, task_data: TaskUpdate, token: str = None):
 
     try:
         # Πάρε την εργασία
-        task_resp = supabase.table("tasks").select("*").eq("id", task_id).execute()
+        task_resp = supabase_admin.table("tasks").select("*").eq("id", task_id).execute()
         if not task_resp.data:
             raise HTTPException(status_code=404, detail="Task not found")
 
@@ -216,12 +314,30 @@ async def update_task(task_id: str, task_data: TaskUpdate, token: str = None):
         team = await get_team(task["team_id"], token)
         user = await get_user(user_id)
 
-        user_role = user.role
-        can_update = (
-            user_role == "ADMIN" or
-            (team and team["leader"]["id"] == user_id) or
-            task["assigned_to"] == user_id
-        )
+        user_role = user.role.upper()
+        
+        is_team_leader = (team and team["leader"]["id"] == user_id)
+        is_assigned_member = (task["assigned_to"] == user_id)
+
+        if is_team_leader:
+            can_update = True
+        elif is_assigned_member:
+            # Assigned member can only change status
+            # Check if any field other than status is being updated
+            other_fields_being_updated = False
+            if task_data.title is not None and task_data.title != task["title"]: other_fields_being_updated = True
+            if task_data.description is not None and task_data.description != task["description"]: other_fields_being_updated = True
+            if task_data.priority is not None and task_data.priority != task["priority"]: other_fields_being_updated = True
+            if task_data.assigned_to is not None and task_data.assigned_to != task["assigned_to"]: other_fields_being_updated = True
+            if task_data.due_date is not None and task_data.due_date != task["due_date"]: other_fields_being_updated = True
+
+            if other_fields_being_updated:
+                raise HTTPException(status_code=403, detail="Assigned members can only change task status.")
+            
+            can_update = True # Allowed to update status, or if no changes were made.
+        else:
+            can_update = False # Neither leader nor assigned member
+
 
         if not can_update:
             raise HTTPException(status_code=403, detail="Not allowed to update this task")
@@ -243,7 +359,7 @@ async def update_task(task_id: str, task_data: TaskUpdate, token: str = None):
 
         update_data["updated_at"] = datetime.utcnow().isoformat()
 
-        updated_resp = supabase.table("tasks").update(update_data).eq("id", task_id).execute()
+        updated_resp = supabase_admin.table("tasks").update(update_data).eq("id", task_id).execute()
 
         if not updated_resp.data:
             raise HTTPException(status_code=400, detail="Failed to update task")
@@ -291,7 +407,7 @@ async def delete_task(task_id: str, token: str = None):
 
     try:
         # Πάρε την εργασία
-        task_resp = supabase.table("tasks").select("*").eq("id", task_id).execute()
+        task_resp = supabase_admin.table("tasks").select("*").eq("id", task_id).execute()
         if not task_resp.data:
             raise HTTPException(status_code=404, detail="Task not found")
 
@@ -301,14 +417,14 @@ async def delete_task(task_id: str, token: str = None):
         team = await get_team(task["team_id"], token)
         user = await get_user(user_id)
 
-        user_role = user.role
-        can_delete = user_role == "ADMIN" or (team and team["leader"]["id"] == user_id)
+        user_role = user.role.upper()
+        can_delete = (team and team["leader"]["id"] == user_id) # Only Team Leader can delete
 
         if not can_delete:
-            raise HTTPException(status_code=403, detail="Not allowed to delete this task")
+            raise HTTPException(status_code=403, detail="Only team leader can delete tasks.")
 
         # Διαγραφή
-        supabase.table("tasks").delete().eq("id", task_id).execute()
+        supabase_admin.table("tasks").delete().eq("id", task_id).execute()
 
         return {"message": "Task deleted successfully"}
     except HTTPException:
@@ -331,12 +447,12 @@ async def create_comment(task_id: str, comment_data: CommentCreate, token: str =
 
     try:
         # Έλεγχος αν υπάρχει η εργασία
-        task_resp = supabase.table("tasks").select("id").eq("id", task_id).execute()
+        task_resp = supabase_admin.table("tasks").select("id").eq("id", task_id).execute()
         if not task_resp.data:
             raise HTTPException(status_code=404, detail="Task not found")
 
         # Δημιουργία σχολίου
-        comment_insert = supabase.table("task_comments").insert({
+        comment_insert = supabase_admin.table("task_comments").insert({
             "task_id": task_id,
             "user_id": user_id,
             "content": comment_data.content,
@@ -378,7 +494,7 @@ async def get_task_comments(task_id: str, token: str = None):
     verify_token(token)
 
     try:
-        comments_resp = supabase.table("task_comments").select("*").eq("task_id", task_id).order("created_at", desc=False).execute()
+        comments_resp = supabase_admin.table("task_comments").select("*").eq("task_id", task_id).order("created_at", desc=False).execute()
 
         comments = []
         for comment in (comments_resp.data or []):
@@ -413,7 +529,7 @@ async def update_comment(comment_id: str, comment_data: CommentUpdate, token: st
 
     try:
         # Πάρε το σχόλιο
-        comment_resp = supabase.table("task_comments").select("*").eq("id", comment_id).execute()
+        comment_resp = supabase_admin.table("task_comments").select("*").eq("id", comment_id).execute()
         if not comment_resp.data:
             raise HTTPException(status_code=404, detail="Comment not found")
 
@@ -422,11 +538,11 @@ async def update_comment(comment_id: str, comment_data: CommentUpdate, token: st
         # Έλεγχος δικαιωμάτων
         if comment["user_id"] != user_id:
             user = await get_user(user_id)
-            if user.role != "ADMIN":
+            if user.role.upper() != "ADMIN":
                 raise HTTPException(status_code=403, detail="Not allowed to update this comment")
 
         # Ενημέρωση
-        updated_resp = supabase.table("task_comments").update({
+        updated_resp = supabase_admin.table("task_comments").update({
             "content": comment_data.content,
             "updated_at": datetime.utcnow().isoformat()
         }).eq("id", comment_id).execute()
@@ -467,20 +583,20 @@ async def delete_comment(comment_id: str, token: str = None):
 
     try:
         # Πάρε το σχόλιο
-        comment_resp = supabase.table("task_comments").select("*").eq("id", comment_id).execute()
+        comment_resp = supabase_admin.table("task_comments").select("*").eq("id", comment_id).execute()
         if not comment_resp.data:
             raise HTTPException(status_code=404, detail="Comment not found")
 
         comment = comment_resp.data[0]
 
-        # Έλεγχos δικαιωμάτων
+        # Έλεγχος δικαιωμάτων
         if comment["user_id"] != user_id:
             user = await get_user(user_id)
-            if user.role != "ADMIN":
+            if user.role.upper() != "ADMIN":
                 raise HTTPException(status_code=403, detail="Not allowed to delete this comment")
 
         # Διαγραφή
-        supabase.table("task_comments").delete().eq("id", comment_id).execute()
+        supabase_admin.table("task_comments").delete().eq("id", comment_id).execute()
 
         return {"message": "Comment deleted successfully"}
     except HTTPException:
@@ -488,6 +604,7 @@ async def delete_comment(comment_id: str, token: str = None):
     except Exception as e:
         print(f"Error deleting comment: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to delete comment")
+
 
 
 if __name__ == "__main__":

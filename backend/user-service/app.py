@@ -28,6 +28,12 @@ supabase: Client = create_client(
     os.getenv("SUPABASE_KEY")
 )
 
+# Supabase Admin Client (for RLS bypass)
+supabase_admin: Client = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+)
+
 JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -93,7 +99,7 @@ async def signup(user_data: UserSignUp):
             "email": user_data.email,
             "password_hash": hashed_password,
             "role": "MEMBER",
-            "is_active": False
+            "is_active": True
         }).execute()
 
         user = response.data[0]
@@ -196,10 +202,10 @@ async def get_all_users(token: str = None):
     
     # Check if user is admin
     response = supabase.table("users").select("role").eq("id", user_id).execute()
-    if not response.data or response.data[0]["role"] != "ADMIN":
+    if not response.data or response.data[0]["role"].upper() != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    users = supabase.table("users").select("*").execute()
+    users = supabase_admin.table("users").select("*").execute()
     return users.data
 
 @app.patch("/api/users/{user_id}/activate", response_model=UserResponse)
@@ -214,22 +220,26 @@ async def toggle_user_status(user_id: str, token: str = None):
     
     # Check if requester is admin
     response = supabase.table("users").select("role").eq("id", admin_id).execute()
-    if not response.data or response.data[0]["role"] != "ADMIN":
+    if not response.data or response.data[0]["role"].upper() != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
         # Get current user
-        user_response = supabase.table("users").select("*").eq("id", user_id).execute()
+        user_response = supabase_admin.table("users").select("*").eq("id", user_id).execute()
         if not user_response.data:
             raise HTTPException(status_code=404, detail="User not found")
         
         current_user = user_response.data[0]
         
+        # Prevent deactivating admins
+        if current_user["role"] == "ADMIN":
+            raise HTTPException(status_code=403, detail="Cannot deactivate an administrator")
+        
         # Toggle status
         new_status = not current_user["is_active"]
         
         # Update user
-        updated = supabase.table("users").update({
+        updated = supabase_admin.table("users").update({
             "is_active": new_status,
             "updated_at": datetime.utcnow().isoformat()
         }).eq("id", user_id).execute()
@@ -266,16 +276,27 @@ async def update_user_role(user_id: str, role_data: dict, token: str = None):
     
     # Check if requester is admin
     response = supabase.table("users").select("role").eq("id", admin_id).execute()
-    if not response.data or response.data[0]["role"] != "ADMIN":
+    if not response.data or response.data[0]["role"].upper() != "ADMIN":
         raise HTTPException(status_code=403, detail="Admin access required")
     
     try:
+        # Get current user
+        user_response = supabase_admin.table("users").select("*").eq("id", user_id).execute()
+        if not user_response.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        current_user = user_response.data[0]
+
+        # Prevent changing admin role
+        if current_user["role"] == "ADMIN":
+            raise HTTPException(status_code=403, detail="Cannot change role of an administrator")
+
         new_role = role_data.get("role")
         if new_role not in ["ADMIN", "TEAM_LEADER", "MEMBER"]:
             raise HTTPException(status_code=400, detail="Invalid role")
         
         # Update user
-        updated = supabase.table("users").update({
+        updated = supabase_admin.table("users").update({
             "role": new_role,
             "updated_at": datetime.utcnow().isoformat()
         }).eq("id", user_id).execute()
@@ -296,6 +317,44 @@ async def update_user_role(user_id: str, role_data: dict, token: str = None):
     except HTTPException:
         raise
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/users/{user_id}")
+async def delete_user(user_id: str, token: str = None):
+    """
+    Delete a user (admin only)
+    """
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    admin_id = verify_token(token)
+    
+    # Check if requester is admin
+    response = supabase.table("users").select("role").eq("id", admin_id).execute()
+    if not response.data or response.data[0]["role"].upper() != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    try:
+        # Get target user to check if they are an admin
+        user_response = supabase_admin.table("users").select("*").eq("id", user_id).execute()
+        if not user_response.data:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        target_user = user_response.data[0]
+        
+        # Prevent deleting admins
+        if target_user["role"] == "ADMIN":
+            raise HTTPException(status_code=403, detail="Cannot delete an administrator")
+        
+        # Delete user
+        supabase_admin.table("users").delete().eq("id", user_id).execute()
+        
+        return {"message": "User deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -19,23 +19,15 @@ export default function TeamDetailsPage() {
   const [isRemovingMember, setIsRemovingMember] = useState(null);
 
   const user = JSON.parse(localStorage.getItem('user'));
-  const token = localStorage.getItem('access_token');
-  const isLeader = team && team.leader.id === user?.id;
+
+  const isLeader = team?.leader?.id === user?.id;
   const isAdmin = user?.role === 'ADMIN';
   const canEdit = isLeader || isAdmin;
-
-  useEffect(() => {
-    fetchTeamDetails();
-    fetchAvailableMembers();
-    fetchTasks();
-  }, [fetchTeamDetails, fetchAvailableMembers, fetchTasks]);
 
   const fetchTeamDetails = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/teams/${teamId}`, {
-        params: { token },
-      });
+      const response = await api.get(`/api/teams/${teamId}`);
       setTeam(response.data);
       setEditData({
         name: response.data.name,
@@ -46,7 +38,7 @@ export default function TeamDetailsPage() {
     } finally {
       setLoading(false);
     }
-  }, [teamId, token]);
+  }, [teamId]);
 
   const fetchAvailableMembers = useCallback(async () => {
     try {
@@ -59,14 +51,18 @@ export default function TeamDetailsPage() {
 
   const fetchTasks = useCallback(async () => {
     try {
-      const response = await api.get(`/api/tasks/team/${teamId}`, {
-        params: { token },
-      });
+      const response = await api.get(`/api/tasks/team/${teamId}`);
       setTasks(response.data);
     } catch (err) {
       console.error('Failed to fetch tasks', err);
     }
-  }, [teamId, token]);
+  }, [teamId]);
+
+  useEffect(() => {
+    fetchTeamDetails();
+    fetchAvailableMembers();
+    fetchTasks();
+  }, [fetchTeamDetails, fetchAvailableMembers, fetchTasks]);
 
   const filteredAvailableMembers = team
     ? availableMembers.filter(
@@ -131,9 +127,7 @@ export default function TeamDetailsPage() {
   const handleUpdateTeam = async (e) => {
     e.preventDefault();
     try {
-      await api.patch(`/api/teams/${teamId}`, editData, {
-        params: { token },
-      });
+      await api.patch(`/api/teams/${teamId}`, editData);
       setEditMode(false);
       fetchTeamDetails();
     } catch (err) {
@@ -144,7 +138,7 @@ export default function TeamDetailsPage() {
   const handleDeleteTeam = async () => {
     if (window.confirm('Are you sure you want to delete this team? This action cannot be undone.')) {
       try {
-        await api.delete(`/api/teams/${teamId}`, { params: { token } });
+        await api.delete(`/api/teams/${teamId}`);
         navigate('/teams');
       } catch (err) {
         setError(err.response?.data?.detail || 'Failed to delete team');
@@ -156,8 +150,6 @@ export default function TeamDetailsPage() {
     try {
       await api.patch(`/api/tasks/${taskId}`, {
         status: newStatus
-      }, {
-        params: { token }
       });
       fetchTasks();
     } catch (err) {
@@ -169,9 +161,7 @@ export default function TeamDetailsPage() {
     if (!window.confirm(`Delete task "${taskTitle}"?`)) return;
 
     try {
-      await api.delete(`/api/tasks/${taskId}`, {
-        params: { token }
-      });
+      await api.delete(`/api/tasks/${taskId}`);
       fetchTasks();
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to delete task');
@@ -227,7 +217,7 @@ export default function TeamDetailsPage() {
               <h1>{team.name}</h1>
               <p className="description">{team.description || 'No description'}</p>
               <div className="team-meta">
-                <span>Leader: <strong>{team.leader.username}</strong></span>
+                <span>Leader: <strong>{team.leader?.username || 'Unknown'}</strong></span>
                 <span>Members: <strong>{team.members.length}</strong></span>
               </div>
             </div>
@@ -286,8 +276,8 @@ export default function TeamDetailsPage() {
         <div className="tasks-header">
           <h2>Tasks ({tasks.length})</h2>
           {canEdit && (
-            <button className="btn-create-task" onClick={() => navigate(`/teams/${teamId}/create-task`)}>
-              + Create Task
+            <button className="btn-create-task" onClick={() => navigate(`/teams/${teamId}/tasks`)}>
+              View Tasks
             </button>
           )}
         </div>
@@ -364,7 +354,7 @@ export default function TeamDetailsPage() {
 
       <div className="members-section">
         <div className="members-header">
-          <h2>Team Members ({team.members.length})</h2>
+          <h2>Team Members ({team.members?.length || 0})</h2>
           {isLeader && (
             <button
               className="btn-primary-sm"
@@ -402,7 +392,7 @@ export default function TeamDetailsPage() {
         </div>
 
         <div className="members-list">
-          {team.members.map((member) => (
+          {(team.members || []).map((member) => (
             <div key={member.id} className={`member-card ${isRemovingMember === member.id ? 'removing' : ''}`}>
               <div className="member-info">
                 <h3>{member.username}</h3>

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import api from '../api';
 import '../styles/CommentForm.css';
 
-export default function CommentForm({ taskId, token, onCommentAdded }) {
+export default function CommentForm({ taskId, onCommentAdded }) {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -28,8 +28,6 @@ export default function CommentForm({ taskId, token, onCommentAdded }) {
       setLoading(true);
       await api.post(`/api/comments/task/${taskId}`, {
         content: content.trim()
-      }, {
-        params: { token }
       });
 
       setContent('');

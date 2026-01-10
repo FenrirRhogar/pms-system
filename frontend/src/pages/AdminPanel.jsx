@@ -5,7 +5,7 @@ import '../styles/AdminPanel.css';
 
 export default function AdminPanel() {
   const navigate = useNavigate();
-  const token = localStorage.getItem('access_token');
+
 
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
@@ -26,20 +26,14 @@ export default function AdminPanel() {
   const [filterCreatedAfter, setFilterCreatedAfter] = useState('');
   const [filterDueBy, setFilterDueBy] = useState('');
 
-  useEffect(() => {
-    // Φόρτωσε ΟΛΑ τα δεδομένα αμέσως κατά την εκκίνηση
-    fetchAllData();
-  }, [fetchAllData]);
-
-  // Φόρτωσε όλα τα δεδομένα παράλληλα
   const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
 
       // Ζήτησε όλα τα δεδομένα παράλληλα
       const [usersRes, teamsRes] = await Promise.all([
-        api.get('/api/users', { params: { token } }),
-        api.get('/api/teams/admin', { params: { token } })
+        api.get('/api/users'),
+        api.get('/api/teams/admin')
       ]);
 
       setUsers(usersRes.data);
@@ -49,9 +43,7 @@ export default function AdminPanel() {
       let tasks = [];
       for (const team of teamsRes.data) {
         try {
-          const tasksRes = await api.get(`/api/tasks/team/${team.id}`, {
-            params: { token },
-          });
+          const tasksRes = await api.get(`/api/tasks/team/${team.id}`);
 
           tasks = [
             ...tasks,
@@ -74,24 +66,19 @@ export default function AdminPanel() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
-    if (activeTab === 'users') {
-      fetchUsers();
-    } else if (activeTab === 'teams') {
-      fetchTeams();
-    } else if (activeTab === 'tasks') {
-      fetchAllTasks();
-    }
-  }, [activeTab, fetchAllTasks, fetchTeams, fetchUsers]);
+    // Φόρτωσε ΟΛΑ τα δεδομένα αμέσως κατά την εκκίνηση
+    fetchAllData();
+  }, [fetchAllData]);
+
+  // Φόρτωσε όλα τα δεδομένα παράλληλα
 
   const fetchUsers = useCallback(async () => {
     try {
       setTabLoading(true);
-      const response = await api.get('/api/users', {
-        params: { token },
-      });
+      const response = await api.get('/api/users');
       setUsers(response.data);
       setError('');
     } catch (err) {
@@ -99,14 +86,12 @@ export default function AdminPanel() {
     } finally {
       setTabLoading(false);
     }
-  }, [token]);
+  }, []);
 
   const fetchTeams = useCallback(async () => {
     try {
       setTabLoading(true);
-      const response = await api.get('/api/teams/admin', {
-        params: { token },
-      });
+      const response = await api.get('/api/teams/admin');
       setTeams(response.data);
       setError('');
     } catch (err) {
@@ -114,7 +99,7 @@ export default function AdminPanel() {
     } finally {
       setTabLoading(false);
     }
-  }, [token]);
+  }, []);
 
   const fetchAllTasks = useCallback(async () => {
     try {
@@ -122,9 +107,7 @@ export default function AdminPanel() {
       let tasks = [];
 
       for (const team of teams) {
-        const tasksResponse = await api.get(`/api/tasks/team/${team.id}`, {
-          params: { token },
-        });
+        const tasksResponse = await api.get(`/api/tasks/team/${team.id}`);
 
         tasks = [
           ...tasks,
@@ -144,9 +127,27 @@ export default function AdminPanel() {
     } finally {
       setTabLoading(false);
     }
-  }, [teams, token]);
+  }, [teams]);
 
-  // ... υπόλοιπος κώδικας παραμένει ίδιος ...
+
+
+  useEffect(() => {
+    if (activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [activeTab, fetchUsers]);
+
+  useEffect(() => {
+    if (activeTab === 'teams') {
+      fetchTeams();
+    }
+  }, [activeTab, fetchTeams]);
+
+  useEffect(() => {
+    if (activeTab === 'tasks') {
+      fetchAllTasks();
+    }
+  }, [activeTab, fetchAllTasks]);
 
   const handleToggleUserStatus = async (userId, currentStatus) => {
     const action = currentStatus ? 'deactivate' : 'activate';
@@ -157,9 +158,7 @@ export default function AdminPanel() {
     if (!window.confirm(confirmMsg)) return;
 
     try {
-      await api.patch(`/api/users/${userId}/activate`, {}, {
-        params: { token },
-      });
+      await api.patch(`/api/users/${userId}/activate`, {});
 
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
@@ -175,9 +174,7 @@ export default function AdminPanel() {
 
   const handleChangeRole = async (userId, newRole) => {
     try {
-      await api.patch(`/api/users/${userId}/role`, { role: newRole }, {
-        params: { token },
-      });
+      await api.patch(`/api/users/${userId}/role`, { role: newRole });
       fetchUsers();
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to update role');
@@ -187,9 +184,7 @@ export default function AdminPanel() {
   const handleDeleteUser = async (userId, username) => {
     if (window.confirm(`Are you sure you want to delete ${username}?`)) {
       try {
-        await api.delete(`/api/users/${userId}`, {
-          params: { token },
-        });
+        await api.delete(`/api/users/${userId}`);
         fetchUsers();
       } catch (err) {
         setError(err.response?.data?.detail || 'Failed to delete user');
@@ -210,9 +205,7 @@ export default function AdminPanel() {
     }
 
     try {
-      await api.post('/api/teams', teamFormData, {
-        params: { token },
-      });
+      await api.post('/api/teams', teamFormData);
       setTeamFormData({ name: '', description: '', leader_id: '' });
       setShowCreateTeamForm(false);
       setError('');
@@ -225,9 +218,7 @@ export default function AdminPanel() {
   const handleDeleteTeam = async (teamId, teamName) => {
     if (window.confirm(`Are you sure you want to delete "${teamName}"?`)) {
       try {
-        await api.delete(`/api/teams/${teamId}`, {
-          params: { token },
-        });
+        await api.delete(`/api/teams/${teamId}`);
         fetchTeams();
       } catch (err) {
         setError(err.response?.data?.detail || 'Failed to delete team');
@@ -341,29 +332,37 @@ const handleClearFilters = () => {
                 </div>
 
                 <div className="user-actions">
-                  <button
-                    className={user.is_active ? 'btn-deactivate' : 'btn-activate'}
-                    onClick={() => handleToggleUserStatus(user.id, user.is_active)}
-                  >
-                    {user.is_active ? 'Deactivate' : 'Activate'}
-                  </button>
+                  {user.role !== 'ADMIN' && (
+                    <button
+                      className={user.is_active ? 'btn-deactivate' : 'btn-activate'}
+                      onClick={() => handleToggleUserStatus(user.id, user.is_active)}
+                    >
+                      {user.is_active ? 'Deactivate' : 'Activate'}
+                    </button>
+                  )}
 
-                  <select
-                    value={user.role}
-                    onChange={(e) => handleChangeRole(user.id, e.target.value)}
-                    className="role-select"
-                  >
-                    <option value="MEMBER">Member</option>
-                    <option value="TEAM_LEADER">Team Leader</option>
-                    <option value="ADMIN">Admin</option>
-                  </select>
+                  {user.role !== 'ADMIN' ? (
+                    <select
+                      value={user.role}
+                      onChange={(e) => handleChangeRole(user.id, e.target.value)}
+                      className="role-select"
+                    >
+                      <option value="MEMBER">Member</option>
+                      <option value="TEAM_LEADER">Team Leader</option>
+                      <option value="ADMIN">Admin</option>
+                    </select>
+                  ) : (
+                    <span className="role-display-admin">ADMIN</span>
+                  )}
 
-                  <button
-                    className="btn-delete"
-                    onClick={() => handleDeleteUser(user.id, user.username)}
-                  >
-                    Delete
-                  </button>
+                  {user.role !== 'ADMIN' && (
+                    <button
+                      className="btn-delete"
+                      onClick={() => handleDeleteUser(user.id, user.username)}
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

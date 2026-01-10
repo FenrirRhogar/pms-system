@@ -10,7 +10,7 @@ import '../styles/TaskDetailsPage.css';
 export default function TaskDetailsPage() {
   const { taskId, teamId } = useParams();
   const navigate = useNavigate();
-  const token = localStorage.getItem('access_token');
+
   const user = JSON.parse(localStorage.getItem('user'));
 
   const [task, setTask] = useState(null);
@@ -24,29 +24,17 @@ export default function TaskDetailsPage() {
     priority: ''
   });
 
-  useEffect(() => {
-    fetchTask();
-  }, [fetchTask]);
-
   const fetchTask = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/tasks/team/${teamId}`, {
-        params: { token },
-      });
+      const response = await api.get(`/api/tasks/${taskId}/details`);
 
-      const foundTask = response.data.find(t => t.id === taskId);
-      if (!foundTask) {
-        setError('Task not found');
-        return;
-      }
-
-      setTask(foundTask);
+      setTask(response.data);
       setFormData({
-        title: foundTask.title,
-        description: foundTask.description,
-        status: foundTask.status,
-        priority: foundTask.priority
+        title: response.data.title,
+        description: response.data.description,
+        status: response.data.status,
+        priority: response.data.priority
       });
       setError('');
     } catch (err) {
@@ -54,7 +42,11 @@ export default function TaskDetailsPage() {
     } finally {
       setLoading(false);
     }
-  }, [teamId, taskId, token]);
+  }, [taskId]);
+
+  useEffect(() => {
+    fetchTask();
+  }, [fetchTask]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -69,8 +61,6 @@ export default function TaskDetailsPage() {
         description: formData.description,
         status: formData.status,
         priority: formData.priority
-      }, {
-        params: { token }
       });
 
       setEditMode(false);
@@ -85,8 +75,6 @@ export default function TaskDetailsPage() {
     try {
       await api.patch(`/api/tasks/${taskId}`, {
         status: newStatus
-      }, {
-        params: { token }
       });
       fetchTask();
     } catch (err) {
@@ -124,14 +112,10 @@ export default function TaskDetailsPage() {
     }
   };
 
-  const canEdit = user && (
-  user.role === 'ADMIN' ||
-  user.role === 'TEAM_LEADER'
-);
+  const canEdit = user && user.role === 'TEAM_LEADER';
 
 const canChangeStatus = user && (
   user.id === task?.assigned_to ||
-  user.role === 'ADMIN' ||
   user.role === 'TEAM_LEADER'
 );
 
@@ -303,12 +287,11 @@ const canChangeStatus = user && (
       {/* Comments Section */}
       <CommentForm
         taskId={taskId}
-        token={token}
         onCommentAdded={fetchTask}
       />
       <CommentsList
-        taskId={taskId}
-        token={token}
+        comments={task.comments || []}
+        onCommentMutated={fetchTask}
       />
     </div>
   );

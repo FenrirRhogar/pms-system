@@ -1,36 +1,14 @@
 // frontend/src/components/CommentsList.jsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import api from '../api';
 import '../styles/CommentsList.css';
 
-export default function CommentsList({ taskId, token }) {
-  const [comments, setComments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const currentUser = JSON.parse(localStorage.getItem('user'));
-
+export default function CommentsList({ comments = [], onCommentMutated }) {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editContent, setEditContent] = useState('');
-
-  useEffect(() => {
-    fetchComments();
-  }, [fetchComments]);
-
-  const fetchComments = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(`/api/comments/task/${taskId}`, {
-        params: { token },
-      });
-      setComments(response.data);
-      setError('');
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load comments');
-    } finally {
-      setLoading(false);
-    }
-  }, [taskId, token]);
+  const [error, setError] = useState('');
+  const currentUser = JSON.parse(localStorage.getItem('user'));
 
   const handleEditComment = (commentId, content) => {
     setEditingCommentId(commentId);
@@ -46,13 +24,13 @@ export default function CommentsList({ taskId, token }) {
     try {
       await api.patch(`/api/comments/${commentId}`, {
         content: editContent
-      }, {
-        params: { token }
       });
       
       setEditingCommentId(null);
       setEditContent('');
-      fetchComments();
+      if (onCommentMutated) {
+        onCommentMutated();
+      }
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to update comment');
     }
@@ -62,18 +40,18 @@ export default function CommentsList({ taskId, token }) {
     if (!window.confirm('Delete this comment?')) return;
 
     try {
-      await api.delete(`/api/comments/${commentId}`, {
-        params: { token }
-      });
-      fetchComments();
+      await api.delete(`/api/comments/${commentId}`);
+      if (onCommentMutated) {
+        onCommentMutated();
+      }
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to delete comment');
     }
   };
 
-  const canEditDelete = (comment) => {
+  const canEditDeleteComment = (comment) => {
     return currentUser && (
-      currentUser.id === comment.user_id || 
+      currentUser.id === comment.user?.id || 
       currentUser.role === 'ADMIN'
     );
   };
@@ -93,8 +71,6 @@ export default function CommentsList({ taskId, token }) {
     
     return date.toLocaleDateString();
   };
-
-  if (loading) return <div className="comments-loading">Loading comments...</div>;
 
   return (
     <div className="comments-list-container">
@@ -121,7 +97,7 @@ export default function CommentsList({ taskId, token }) {
                   )}
                 </div>
 
-                {canEditDelete(comment) && (
+                {canEditDeleteComment(comment) && (
                   <div className="comment-actions">
                     <button
                       className="comment-btn-edit"

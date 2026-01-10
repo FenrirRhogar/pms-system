@@ -3,11 +3,8 @@ services:
     build: ./backend/user-service
     ports:
       - "8080:8080"
-    environment:
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_KEY=${SUPABASE_KEY}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - JWT_SECRET=${JWT_SECRET}
+    env_file:
+      - ./.env
     volumes:
       - ./backend/user-service:/app
     command: uvicorn app:app --host 0.0.0.0 --port 8080
@@ -16,11 +13,8 @@ services:
     build: ./backend/team-service
     ports:
       - "8081:8081"
-    environment:
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_KEY=${SUPABASE_KEY}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - JWT_SECRET=${JWT_SECRET}
+    env_file:
+      - ./.env
     volumes:
       - ./backend/team-service:/app
     command: uvicorn app:app --host 0.0.0.0 --port 8081
@@ -29,11 +23,8 @@ services:
     build: ./backend/task-service
     ports:
       - "8082:8082"
-    environment:
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_KEY=${SUPABASE_KEY}
-      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - JWT_SECRET=${JWT_SECRET}
+    env_file:
+      - ./.env
     volumes:
       - ./backend/task-service:/app
     command: uvicorn app:app --host 0.0.0.0 --port 8082

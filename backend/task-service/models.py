@@ -11,6 +11,23 @@ class UserResponse(BaseModel):
     is_active: bool
     created_at: str
 
+# ============ COMMENTS ============
+
+class CommentCreate(BaseModel):
+    content: str
+
+class CommentUpdate(BaseModel):
+    content: str
+
+class CommentResponse(BaseModel):
+    id: str
+    task_id: str
+    user_id: str
+    user: Optional[UserResponse] = None
+    content: str
+    created_at: datetime
+    updated_at: datetime
+
 # ============ TASKS ============
 
 class TaskCreate(BaseModel):
@@ -50,26 +67,10 @@ class TaskDetailResponse(BaseModel):
     status: str
     priority: str
     created_by: str
-    created_by_user: Optional['UserResponse'] = None
+    created_by_user: Optional[UserResponse] = None
     assigned_to: Optional[str]
-    assigned_to_user: Optional['UserResponse'] = None
+    assigned_to_user: Optional[UserResponse] = None
     due_date: Optional[datetime]
     created_at: datetime
     updated_at: datetime
-
-# ============ COMMENTS ============
-
-class CommentCreate(BaseModel):
-    content: str
-
-class CommentUpdate(BaseModel):
-    content: str
-
-class CommentResponse(BaseModel):
-    id: str
-    task_id: str
-    user_id: str
-    user: Optional['UserResponse'] = None
-    content: str
-    created_at: datetime
-    updated_at: datetime
+    comments: Optional[List[CommentResponse]] = []

@@ -867,3 +867,21 @@
     font-size: 12px;
   }
 }
+
+.role-display-admin {
+  flex: 1;
+  min-width: 80px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg-2); /* A different background to show it's disabled/readonly */
+  color: var(--color-text);
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 600;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}

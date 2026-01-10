@@ -29,6 +29,12 @@ supabase: Client = create_client(
     os.getenv("SUPABASE_KEY")
 )
 
+# Supabase Admin Client (for RLS bypass)
+supabase_admin: Client = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+)
+
 JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key")
 ALGORITHM = "HS256"
 
@@ -66,6 +72,73 @@ async def get_user(user_id: str) -> UserResponse:
 def read_root():
     return {"message": "Team Service - Welcome!"}
 
+
+@app.get("/api/teams/admin")
+async def get_all_teams(token: str = None):
+    """
+    Get all teams (admin only)
+    """
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    admin_id = verify_token(token)
+    
+    # Check if user is admin
+    response = supabase.table("users").select("role").eq("id", admin_id).execute()
+    if not response.data or response.data[0]["role"].upper() != "ADMIN":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    try:
+        teams_response = supabase_admin.table("teams").select("*").execute()
+        
+        teams = []
+        for team in teams_response.data:
+            leader_info = await get_user(team["leader_id"])
+            
+            teams.append({
+                "id": team["id"],
+                "name": team["name"],
+                "description": team["description"],
+                "leader_id": team["leader_id"],
+                "leader_info": leader_info,
+                "created_at": team["created_at"],
+                "updated_at": team["updated_at"]
+            })
+        
+        return teams
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/teams/available-members")
+async def get_available_team_members(token: str = None):
+    """
+    Επιστρέφει όλους τους users με role MEMBER.
+    """
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    verify_token(token)
+
+    try:
+        resp = supabase_admin.table("users").select(
+            "id, username, email, role"
+        ).eq("role", "MEMBER").execute()
+        users = resp.data or []
+        print("AVAILABLE MEMBERS:", users)
+        return [
+            {
+                "id": u["id"],
+                "username": u["username"],
+                "email": u["email"],
+                "role": u["role"],
+            }
+            for u in users
+        ]
+    except Exception as e:
+        print("Error getting available members:", e)
+        raise HTTPException(status_code=500, detail="Failed to get available members")
+
+
 @app.get("/api/teams/{team_id}", response_model=TeamDetailResponse)
 async def get_team(team_id: str, token: str = None):
     """
@@ -78,7 +151,7 @@ async def get_team(team_id: str, token: str = None):
     
     try:
         # Get team
-        team_response = supabase.table("teams").select("*").eq("id", team_id).execute()
+        team_response = supabase_admin.table("teams").select("*").eq("id", team_id).execute()
         if not team_response.data:
             raise HTTPException(status_code=404, detail="Team not found")
         
@@ -88,7 +161,7 @@ async def get_team(team_id: str, token: str = None):
         leader = await get_user(team["leader_id"])
         
         # Get team members
-        members_response = supabase.table("team_members").select("user_id").eq("team_id", team_id).execute()
+        members_response = supabase_admin.table("team_members").select("user_id").eq("team_id", team_id).execute()
         
         members = []
         if members_response.data:
@@ -106,12 +179,12 @@ async def get_team(team_id: str, token: str = None):
             name=team["name"],
             description=team["description"],
             leader=UserResponse(
-                id=leader["id"],
-                username=leader["username"],
-                email=leader["email"],
-                role=leader["role"],
-                is_active=leader["is_active"],
-                created_at=leader["created_at"]
+                id=leader.id,
+                username=leader.username,
+                email=leader.email,
+                role=leader.role,
+                is_active=leader.is_active,
+                created_at=leader.created_at
             ),
             members=members,
             created_at=team["created_at"],
@@ -138,11 +211,11 @@ async def get_leader_team(token: str = None):
         user = await get_user(user_id)
         
         # If not a leader, return error
-        if user.role != "TEAM_LEADER":
+        if user.role.upper() != "TEAM_LEADER":
             raise HTTPException(status_code=403, detail="User is not a team leader")
         
         # Get team where this user is leader
-        team_response = supabase.table("teams").select("*").eq("leader_id", user_id).execute()
+        team_response = supabase_admin.table("teams").select("*").eq("leader_id", user_id).execute()
         if not team_response.data:
             raise HTTPException(status_code=404, detail="Team not found")
         
@@ -152,7 +225,7 @@ async def get_leader_team(token: str = None):
         leader = user
         
         # Get team members
-        members_response = supabase.table("team_members").select("user_id").eq("team_id", team["id"]).execute()
+        members_response = supabase_admin.table("team_members").select("user_id").eq("team_id", team["id"]).execute()
         
         members = []
         if members_response.data:
@@ -193,13 +266,13 @@ async def get_member_teams(token: str = None):
     
     try:
         # Get all teams where this user is a member
-        memberships_response = supabase.table("team_members").select("team_id").eq("user_id", user_id).execute()
+        memberships_response = supabase_admin.table("team_members").select("team_id").eq("user_id", user_id).execute()
         
         teams = []
         if memberships_response.data:
             for membership in memberships_response.data:
                 team_id = membership['team_id']
-                team_response = supabase.table("teams").select("*").eq("id", team_id).execute()
+                team_response = supabase_admin.table("teams").select("*").eq("id", team_id).execute()
                 if team_response.data:
                     team_data = team_response.data[0]
                     teams.append(TeamResponse(
@@ -219,36 +292,6 @@ async def get_member_teams(token: str = None):
         raise HTTPException(status_code=500, detail=f"Failed to get teams: {str(e)}")
 
 
-@app.get("/api/teams/admin")
-async def get_all_teams(token: str = None):
-    """
-    Get all teams (admin only)
-    """
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    admin_id = verify_token(token)
-    
-    try:
-        teams_response = supabase.table("teams").select("*").execute()
-        
-        teams = []
-        for team in teams_response.data:
-            leader_info = await get_user(team["leader_id"])
-            
-            teams.append({
-                "id": team["id"],
-                "name": team["name"],
-                "description": team["description"],
-                "leader_id": team["leader_id"],
-                "leader_info": leader_info,
-                "created_at": team["created_at"],
-                "updated_at": team["updated_at"]
-            })
-        
-        return teams
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/teams", response_model=TeamResponse)
@@ -336,7 +379,7 @@ async def add_team_member(team_id: str, body: AddMemberRequest, token: str = Non
         if not caller_resp.data:
             raise HTTPException(status_code=404, detail="User not found")
 
-        caller_role = caller_resp.data[0]["role"]
+        caller_role = caller_resp.data[0]["role"].upper()
         if caller_role not in ["ADMIN", "TEAM_LEADER"] or (
             caller_role == "TEAM_LEADER" and team["leader_id"] != user_id
         ):
@@ -379,7 +422,7 @@ async def remove_team_member(team_id: str, user_id: str, token: str = None):
         if not caller_resp.data:
             raise HTTPException(status_code=404, detail="User not found")
 
-        caller_role = caller_resp.data[0]["role"]
+        caller_role = caller_resp.data[0]["role"].upper()
         if caller_role not in ["ADMIN", "TEAM_LEADER"] or (
             caller_role == "TEAM_LEADER" and team["leader_id"] != caller_id
         ):
@@ -398,36 +441,6 @@ async def remove_team_member(team_id: str, user_id: str, token: str = None):
     except Exception as e:
         print("Error removing member:", e)
         raise HTTPException(status_code=500, detail="Failed to remove member")
-
-
-@app.get("/api/teams/available-members")
-async def get_available_team_members(token: str = None):
-    """
-    Επιστρέφει όλους τους users με role MEMBER.
-    """
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    verify_token(token)
-
-    try:
-        resp = supabase.table("users").select(
-            "id, username, email, role"
-        ).eq("role", "MEMBER").execute()
-        users = resp.data or []
-        print("AVAILABLE MEMBERS:", users)
-        return [
-            {
-                "id": u["id"],
-                "username": u["username"],
-                "email": u["email"],
-                "role": u["role"],
-            }
-            for u in users
-        ]
-    except Exception as e:
-        print("Error getting available members:", e)
-        raise HTTPException(status_code=500, detail="Failed to get available members")
 
 if __name__ == "__main__":
     import uvicorn

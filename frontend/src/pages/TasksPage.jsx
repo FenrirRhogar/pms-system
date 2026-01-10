@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import api from '../api';
 import CommentsList from '../components/CommentsList';
 import CommentForm from '../components/CommentForm';
@@ -7,7 +7,7 @@ import '../styles/TasksPage.css';
 
 export default function TasksPage() {
   const { teamId } = useParams();
-  const token = localStorage.getItem('access_token');
+
   const user = JSON.parse(localStorage.getItem('user'));
 
   const [team, setTeam] = useState(null);
@@ -30,31 +30,22 @@ export default function TasksPage() {
 
   const isLeader = team && team.leader.id === user?.id;
   const isAdmin = user?.role === 'ADMIN';
-  const canCreateTask = isLeader || isAdmin;
-
-  useEffect(() => {
-    fetchTeamDetails();
-    fetchTasks();
-  }, [fetchTeamDetails, fetchTasks]);
+  const canCreateTask = isLeader;
 
   const fetchTeamDetails = useCallback(async () => {
     try {
-      const response = await api.get(`/api/teams/${teamId}`, {
-        params: { token },
-      });
+      const response = await api.get(`/api/teams/${teamId}`);
       setTeam(response.data);
       setTeamMembers(response.data.members);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to load team');
     }
-  }, [teamId, token]);
+  }, [teamId]);
 
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/tasks/team/${teamId}`, {
-        params: { token },
-      });
+      const response = await api.get(`/api/tasks/team/${teamId}`);
       setTasks(response.data);
       setError('');
     } catch (err) {
@@ -62,7 +53,12 @@ export default function TasksPage() {
     } finally {
       setLoading(false);
     }
-  }, [teamId, token]);
+  }, [teamId]);
+
+  useEffect(() => {
+    fetchTeamDetails();
+    fetchTasks();
+  }, [fetchTeamDetails, fetchTasks]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -82,9 +78,8 @@ export default function TasksPage() {
         description: formData.description,
         priority: formData.priority,
         assigned_to: formData.assigned_to || null,
-        due_date: formData.due_date || null
-      }, {
-        params: { token }
+        due_date: formData.due_date || null,
+        team_id: teamId
       });
 
       setFormData({
@@ -106,8 +101,6 @@ export default function TasksPage() {
     try {
       await api.patch(`/api/tasks/${taskId}`, {
         status: newStatus
-      }, {
-        params: { token }
       });
       fetchTasks();
     } catch (err) {
@@ -119,9 +112,7 @@ export default function TasksPage() {
     if (!window.confirm('Are you sure you want to delete this task?')) return;
 
     try {
-      await api.delete(`/api/tasks/${taskId}`, {
-        params: { token }
-      });
+      await api.delete(`/api/tasks/${taskId}`);
       fetchTasks();
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to delete task');
@@ -294,7 +285,16 @@ export default function TasksPage() {
           filteredTasks.map(task => (
             <div key={task.id} className="task-card">
               <div className="task-header">
-                <h3>{task.title}</h3>
+                <div>
+                  <h3>
+                    <Link to={`/teams/${teamId}/tasks/${task.id}`} className="task-title-link">
+                      {task.title}
+                    </Link>
+                  </h3>
+                  <div className="team-link-container">
+                    Team: <Link to={`/teams/${teamId}`} className="team-link">{team?.name}</Link>
+                  </div>
+                </div>
                 <div className="task-badges">
                   <span
                     className="priority-badge"
@@ -347,12 +347,11 @@ export default function TasksPage() {
               </div>
               <CommentForm 
   taskId={task.id} 
-  token={token}
   onCommentAdded={() => fetchTasks()}
 />
 <CommentsList 
-  taskId={task.id} 
-  token={token}
+  comments={task.comments || []}
+  onCommentMutated={() => fetchTasks()}
 />
             </div>
           ))
