@@ -1,0 +1,114 @@
+\documentclass[12pt,a4paper]{article}
+
+% Packages for LuaLaTeX/XeLaTeX
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{greek}
+\setotherlanguage{english}
+
+% Font setup - Make sure a font with Greek support is available
+\setmainfont{Linux Libertine O}
+\setsansfont{Linux Biolinum O}
+
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+% Code highlighting setup
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10},
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    stringstyle=\color{red}
+}
+
+\title{\textbf{Αναφορά Εργασίας: Project Management System}}
+\author{
+    Ιωάννης Μπουρίτης (ΑΜ: 2021030173) 
+}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Περιγραφή Εφαρμογής}
+Η παρούσα εργασία αφορά την ανάπτυξη ενός ολοκληρωμένου Συστήματος Διαχείρισης Έργων (Project Management System - PMS). Η εφαρμογή είναι σχεδιασμένη με αρχιτεκτονική μικροϋπηρεσιών (Microservices) και επιτρέπει τη συνεργασία ομάδων, τη διαχείριση χρηστών και την ανάθεση/παρακολούθηση εργασιών.
+
+Οι βασικές λειτουργικές ενότητες περιλαμβάνουν:
+\begin{itemize}
+        \item \textbf{Διαχείριση Χρηστών:} Εγγραφή, σύνδεση, αυθεντικοποίηση (JWT) και ρόλοι χρηστών (Admin, Team Leader, Member).
+        \item \textbf{Διαχείριση Ομάδων:} Δημιουργία ομάδων από διαχειριστές και ανάθεση μελών.
+        \item \textbf{Διαχείριση Εργασιών:} Δημιουργία, ενημέρωση, ανάθεση εργασιών και σχολιασμός.
+        \item \textbf{Admin Panel:} Κεντρική διαχείριση για ενεργοποίηση χρηστών και εποπτεία του συστήματος.
+\end{itemize}
+
+\section{Αρχιτεκτονική και Τεχνολογίες}
+Η εφαρμογή ακολουθεί το μοντέλο των Microservices, όπου κάθε υπηρεσία εκτελείται σε απομονωμένο container.
+
+\subsection{Microservices}
+\begin{enumerate}
+        \item \textbf{User Service (Port 8080):} Υπεύθυνο για την εγγραφή, το login και τη διαχείριση προφίλ χρηστών. 
+        \item \textbf{Team Service (Port 8081):} Διαχειρίζεται τις ομάδες και τη συμμετοχή μελών σε αυτές.
+        \item \textbf{Task Service (Port 8082):} Διαχειρίζεται τα tasks και τα σχόλια (comments).
+\end{enumerate}
+
+\subsection{API Gateway & Frontend}
+\begin{itemize}
+        \item \textbf{API Gateway (Nginx - Port 80):} Δρομολογεί τα αιτήματα από το frontend προς τα κατάλληλα microservices.
+        \item \textbf{Frontend (React.js - Port 3000):} Προσφέρει ένα σύγχρονο και αποκρινόμενο (responsive) περιβάλλον εργασίας.
+\end{itemize}
+
+\subsection{Βάση Δεδομένων}
+Για την αποθήκευση των δεδομένων χρησιμοποιείται ένας \textbf{PostgreSQL 15} container εντός του Docker stack. Η επικοινωνία των υπηρεσιών με τη βάση γίνεται μέσω του \textbf{SQLAlchemy ORM}. 
+
+Για την οπτικοποίηση και την εύκολη διαχείριση των πινάκων, ενσωματώθηκε η υπηρεσία \textbf{NocoDB} (Port 8083), η οποία προσφέρει ένα περιβάλλον παρόμοιο με αυτό της Supabase, επιτρέποντας την επεξεργασία των δεδομένων σε μορφή υπολογιστικού φύλλου (spreadsheet).
+
+\section{Υλοποίηση}
+
+Οι κυριότερες υλοποιήσεις περιλαμβάνουν:
+\begin{itemize}
+        \item \textbf{Ασφάλεια Admin:} Υλοποιήθηκε λογική που αποτρέπει την αυτο-διαγραφή ή την απενεργοποίηση ενός Admin από τον ίδιο ή από άλλους διαχειριστές, διασφαλίζοντας την πρόσβαση στο σύστημα.
+        \item \textbf{Περιορισμοί Ηγεσίας:} Ένας χρήστης με ρόλο Team Leader δεν μπορεί να ηγηθεί σε περισσότερες από μία ομάδες ταυτόχρονα.
+        \item \textbf{UI/UX Improvements:} Πραγματοποιήθηκε πλήρης επανασχεδιασμός της διεπαφής με σύγχρονα χρώματα (Teal theme), animations και βελτιωμένη πλοήγηση (clickable task titles και team links).
+        \item \textbf{Database Seeding:} Κατά την πρώτη εκκίνηση, το σύστημα δημιουργεί αυτόματα έναν προκαθορισμένο διαχειριστή (\texttt{admin@example.com}).
+        \item \textbf{Retry Logic:} Οι υπηρεσίες διαθέτουν μηχανισμό επαναπροσπάθειας σύνδεσης στη βάση για την αποφυγή σφαλμάτων κατά την εκκίνηση του Docker.
+\end{itemize}
+
+\section{Migration & Deployment στο Google Cloud (GCP)}
+Η διαδικασία μεταφοράς της εφαρμογής στο Cloud περιλαμβάνει:
+
+\begin{enumerate}
+        \item \textbf{Δημιουργία VM Instance:} Instance τύπου e2-medium με Ubuntu στο Google Compute Engine.
+        \item \textbf{Προετοιμασία Περιβάλλοντος:} Εγκατάσταση Docker και Docker Compose.
+        \item \textbf{Μεταφορά Κώδικα:} Κλωνοποίηση του repository και καθαρισμός παλαιών αρχείων (π.χ. monolith backend).
+        \item \textbf{Ρύθμιση Περιβάλλοντος:} Δημιουργία αρχείου \texttt{.env} μόνο με το \texttt{JWT_SECRET}. Η βάση δεδομένων είναι πλέον εσωτερική και δεν απαιτεί εξωτερικά κλειδιά.
+        \item \textbf{Εκκίνηση Υπηρεσιών:} Χρήση της εντολής \texttt{docker-compose up --build -d}.
+        \item \textbf{Ρύθμιση Firewall:} Άνοιγμα θυρών 80, 3000 και προαιρετικά 8083 για πρόσβαση στο NocoDB.
+\end{enumerate}
+
+\section{Οδηγίες Πρόσβασης}
+
+\textbf{Τοπική Εκτέλεση:}
+\begin{itemize}
+        \item \textbf{Frontend:} \url{http://localhost:3000}
+        \item \textbf{NocoDB (DB UI):} \url{http://localhost:8083}
+        \item \textbf{API Gateway:} \url{http://localhost:80}
+\end{itemize}
+
+\textbf{Default Credentials:}
+\begin{itemize}
+        \item \textbf{Email:} \texttt{admin@example.com}
+        \item \textbf{Password:} \texttt{adminpassword}
+\end{itemize}
+
+\end{document}

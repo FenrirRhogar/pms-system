@@ -1,7 +1,7 @@
 all: relaunch
 
 stop:
-	docker-compose down -v
+	docker-compose down
 
 build:
 	docker-compose up --build
