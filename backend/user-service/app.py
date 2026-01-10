@@ -99,7 +99,7 @@ async def signup(user_data: UserSignUp):
             "email": user_data.email,
             "password_hash": hashed_password,
             "role": "MEMBER",
-            "is_active": True
+            "is_active": False
         }).execute()
 
         user = response.data[0]

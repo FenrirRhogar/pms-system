@@ -1,7 +1,9 @@
+/* frontend/src/styles/ProfilePage.css */
+
 .profile-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 30px 20px;
+  padding: 40px 20px;
 }
 
 .btn-back {
@@ -13,19 +15,26 @@
   cursor: pointer;
   font-weight: 500;
   margin-bottom: 30px;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-back:hover {
   background: var(--color-secondary-hover);
+  transform: translateX(-4px);
 }
 
 .profile-card {
   background: var(--color-surface);
   border: 1px solid var(--color-card-border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 40px;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
+  animation: scaleIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .profile-header {
@@ -41,14 +50,15 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-active) 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-teal-700) 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
-  font-weight: bold;
+  font-size: 40px;
+  font-weight: 800;
   flex-shrink: 0;
+  box-shadow: 0 8px 24px rgba(var(--color-primary-rgb), 0.3);
 }
 
 .profile-info {
@@ -56,9 +66,10 @@
 }
 
 .profile-info h1 {
-  margin: 0 0 5px 0;
+  margin: 0 0 8px 0;
   color: var(--color-text);
   font-size: 32px;
+  font-weight: 800;
 }
 
 .profile-info .email {
@@ -68,19 +79,24 @@
 }
 
 .btn-edit-profile {
-  background: var(--color-primary);
-  color: white;
+  background: var(--color-secondary);
+  color: var(--color-primary);
   padding: 10px 20px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.3s;
   flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
 }
 
 .btn-edit-profile:hover {
-  background: var(--color-primary-hover);
+  background: var(--color-primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
 }
 
 .profile-details {
@@ -88,34 +104,29 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .detail-section {
   background: var(--color-background);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: 12px;
+  padding: 24px;
 }
 
 .detail-section h3 {
   margin: 0 0 20px 0;
   color: var(--color-text);
   font-size: 18px;
+  font-weight: 700;
 }
 
 .detail-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
+  padding: 16px 0;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -132,7 +143,7 @@
 .detail-item .value {
   color: var(--color-text);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .role-badge {
@@ -140,7 +151,9 @@
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .role-admin {
@@ -163,7 +176,9 @@
   padding: 4px 12px;
   border-radius: 20px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .status-badge.active {
@@ -182,35 +197,39 @@
 }
 
 .edit-profile-form h2 {
-  margin: 0 0 20px 0;
+  margin: 0 0 24px 0;
   color: var(--color-text);
+  font-size: 24px;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 8px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text);
+  font-size: 14px;
 }
 
 .form-group input {
   width: 100%;
-  padding: 10px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  padding: 12px 16px;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
   background: var(--color-background);
   color: var(--color-text);
   font-family: inherit;
-  font-size: 14px;
+  font-size: 15px;
+  transition: all 0.2s;
 }
 
 .form-group input:disabled {
   background: var(--color-secondary);
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .form-group input:focus {
@@ -221,26 +240,29 @@
 
 .form-group small {
   display: block;
-  margin-top: 5px;
+  margin-top: 8px;
   color: var(--color-text-secondary);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .form-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 30px;
+  gap: 16px;
+  margin-top: 32px;
 }
 
 .btn-cancel,
 .btn-save {
   flex: 1;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 14px;
 }
 
 .btn-cancel {
@@ -259,24 +281,38 @@
 
 .btn-save:hover:not(:disabled) {
   background: var(--color-primary-hover);
+  box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
+  transform: translateY(-2px);
 }
 
 .btn-save:disabled {
   background: var(--color-secondary);
+  color: var(--color-text-secondary);
   cursor: not-allowed;
-  opacity: 0.6;
 }
 
 .loading {
   text-align: center;
-  padding: 40px;
+  padding: 60px;
   color: var(--color-text-secondary);
 }
 
 .error-message {
   background: rgba(var(--color-error-rgb), 0.1);
   color: var(--color-error);
-  padding: 15px;
-  border-radius: 6px;
+  padding: 16px;
+  border-radius: 8px;
   border-left: 4px solid var(--color-error);
+  margin-bottom: 24px;
+}
+
+@media (max-width: 600px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .profile-header .btn-edit-profile {
+    width: 100%;
+  }
 }

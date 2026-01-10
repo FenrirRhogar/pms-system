@@ -582,19 +582,23 @@ const handleClearFilters = () => {
 
                   <div className="task-info-admin">
                     <div>
-                      <strong>Created by:</strong> {task.created_by_user?.username}
+                      <strong>Created by</strong>
+                      <span>{task.created_by_user?.username}</span>
                     </div>
                     <div>
-                      <strong>Assigned to:</strong> {task.assigned_to_user?.username || 'Unassigned'}
+                      <strong>Assigned to</strong>
+                      <span>{task.assigned_to_user?.username || 'Unassigned'}</span>
                     </div>
                     {task.created_at && (
                       <div>
-                        <strong>Created:</strong> {new Date(task.created_at).toLocaleDateString()}
+                        <strong>Created</strong>
+                        <span>{new Date(task.created_at).toLocaleDateString()}</span>
                       </div>
                     )}
                     {task.due_date && (
                       <div>
-                        <strong>Due:</strong> {new Date(task.due_date).toLocaleDateString()}
+                        <strong>Due</strong>
+                        <span>{new Date(task.due_date).toLocaleDateString()}</span>
                       </div>
                     )}
                   </div>

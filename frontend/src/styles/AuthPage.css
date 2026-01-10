@@ -3,98 +3,117 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: var(--color-background);
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(189,100%,56%,0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(340,100%,76%,0.1) 0px, transparent 50%);
 }
 
 .auth-card {
-  background: #ffffff;
-  padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  background: var(--color-surface);
+  padding: 48px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
+  border: 1px solid var(--color-card-border);
 }
 
 .auth-card h2 {
   text-align: center;
-  margin-bottom: 30px;
-  color: #1a1a1a;
+  margin-bottom: 32px;
+  color: var(--color-text);
+  font-size: 28px;
+  font-weight: 700;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
-  color: #666666 !important;  /* ← CUSTOM χρώμα label */
+  font-size: 14px;
+  color: var(--color-text-secondary);
 }
 
 .form-group input {
-  width: 100% !important;
-  padding: 10px 12px !important;
-  border: 2px solid #e0e0e0 !important;  /* ← CUSTOM χρώμα border */
-  border-radius: 6px !important;
-  font-size: 14px !important;
-  background: #f9f9f9 !important;  /* ← CUSTOM χρώμα input background */
-  color: #333333 !important;  /* ← CUSTOM χρώμα input text */
-  transition: all 0.3s !important;
-  font-family: inherit !important;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  font-size: 15px;
+  background: var(--color-background);
+  color: var(--color-text);
+  transition: all 0.2s ease;
 }
 
 .form-group input:focus {
-  outline: none !important;
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
-  background: #ffffff !important;
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--focus-ring);
+  background: var(--color-surface);
 }
 
 .auth-card button {
   width: 100%;
-  padding: 12px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: #ffffff !important;
-  border: none !important;
-  border-radius: 6px !important;
-  font-size: 16px !important;
-  font-weight: 600 !important;
-  cursor: pointer !important;
-  transition: opacity 0.3s !important;
+  padding: 14px;
+  background: var(--color-primary);
+  color: var(--color-btn-primary-text);
+  border: none;
+  border-radius: var(--radius-base);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
 }
 
 .auth-card button:hover {
-  opacity: 0.9 !important;
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.auth-card button:active {
+  transform: translateY(0);
 }
 
 .auth-card button:disabled {
-  opacity: 0.6 !important;
-  cursor: not-allowed !important;
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .error-message {
-  background: #fee !important;
-  color: #c00 !important;
-  padding: 12px !important;
-  border-radius: 6px !important;
-  margin-bottom: 20px !important;
-  text-align: center !important;
-  border-left: 4px solid #c00 !important;
+  background: rgba(var(--color-red-500-rgb), 0.1);
+  color: var(--color-error);
+  padding: 12px 16px;
+  border-radius: var(--radius-base);
+  margin-bottom: 24px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid rgba(var(--color-red-500-rgb), 0.2);
 }
 
 .auth-card p {
   text-align: center;
-  margin-top: 20px;
-  color: #999999;
+  margin-top: 24px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
 }
 
 .auth-card a {
-  color: #667eea;
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
+  transition: color 0.2s;
 }
 
 .auth-card a:hover {
+  color: var(--color-primary-hover);
   text-decoration: underline;
 }

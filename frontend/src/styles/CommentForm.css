@@ -1,18 +1,18 @@
 /* frontend/src/styles/CommentForm.css */
 
 .comment-form-container {
-  margin-top: 20px;
-  padding: 20px;
+  margin-top: 30px;
+  padding: 24px;
   background: var(--color-surface);
   border: 1px solid var(--color-card-border);
-  border-radius: 10px;
+  border-radius: 12px;
   animation: slideUp 0.3s ease-out;
 }
 
 .comment-form-title {
-  margin: 0 0 15px 0;
+  margin: 0 0 20px 0;
   color: var(--color-text);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
 }
 
@@ -39,22 +39,23 @@
 }
 
 .comment-textarea {
-  padding: 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  padding: 15px;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
   background: var(--color-background);
   color: var(--color-text);
   font-family: inherit;
   font-size: 14px;
   line-height: 1.6;
   resize: vertical;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .comment-textarea:focus {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px var(--color-focus-ring);
+  background: var(--color-surface);
 }
 
 .comment-textarea::placeholder {
@@ -72,7 +73,7 @@
 }
 
 .btn-submit-comment {
-  padding: 10px 20px;
+  padding: 12px 24px;
   background: var(--color-primary);
   color: white;
   border: none;
@@ -80,9 +81,10 @@
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  align-self: flex-start;
 }
 
 .btn-submit-comment:hover:not(:disabled) {
@@ -94,6 +96,8 @@
 .btn-submit-comment:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background: var(--color-secondary);
+  color: var(--color-text-secondary);
 }
 
 @keyframes slideUp {
@@ -114,5 +118,9 @@
 
   .comment-textarea {
     min-height: 100px;
+  }
+  
+  .btn-submit-comment {
+    width: 100%;
   }
 }
