@@ -76,7 +76,7 @@ JWT_SECRET=your-secure-random-string
 Use Docker Compose to build and start the entire system:
 
 ```bash
-docker-compose up --build
+docker-compose up --build -d
 ```
 
 ### 4. Access the Application
