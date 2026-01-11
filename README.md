@@ -60,7 +60,7 @@ Internal services (User: 8080, Team: 8081, Task: 8082) are hidden inside the Doc
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/FenrirRhogar/pms-system.git
 cd pms-system
 ```
 
@@ -85,7 +85,6 @@ docker-compose up --build -d
 
 - **Frontend:** [http://localhost:3000](http://localhost:3000)
 - **API Gateway:** `http://localhost:80`
-- **NocoDB (Database UI):** [http://localhost:8083](http://localhost:8083)
 
 **Default Admin Credentials:**
 - **Email:** `admin@example.com`
