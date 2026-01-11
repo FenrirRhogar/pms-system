@@ -37,13 +37,20 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error("API Error:", error); // Debug log
     if (error.response && error.response.status === 401) {
-      // Καθαρισμός ληγμένου/άκυρου token
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('leaderTeamId');
-      // Redirect σε login
-      window.location.href = '/login';
+      // Don't redirect if we are failing to login (invalid credentials)
+      // or if we are already on the login page
+      const isLoginRequest = error.config.url.includes('/login');
+      const isLoginPage = window.location.pathname === '/login';
+
+      if (!isLoginRequest && !isLoginPage) {
+          // Clean up and redirect only for expired sessions on protected routes
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('leaderTeamId');
+          window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

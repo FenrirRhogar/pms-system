@@ -16,11 +16,14 @@ export default function LoginPage({ setIsAuthenticated, setUserRole, setLeaderTe
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Login form submitted");
     setError('');
     setLoading(true);
 
     try {
+      console.log("Sending login request...", formData);
       const response = await authAPI.login(formData.email, formData.password);
+      console.log("Login response received:", response);
       
       // Save token and user data
       const token = response.data.access_token;
@@ -32,6 +35,8 @@ export default function LoginPage({ setIsAuthenticated, setUserRole, setLeaderTe
       // Update parent state
       setIsAuthenticated(true);
       setUserRole(user.role);
+      
+      console.log("Redirecting based on role:", user.role);
       
       // Navigate based on role
       if (user.role === 'ADMIN') {
@@ -55,8 +60,10 @@ export default function LoginPage({ setIsAuthenticated, setUserRole, setLeaderTe
         navigate('/my-teams');
       }
     } catch (err) {
+      console.error("Login caught error:", err);
       setError(err.response?.data?.detail || 'Login failed');
     } finally {
+      console.log("Login finally block reached, setting loading false");
       setLoading(false);
     }
   };
