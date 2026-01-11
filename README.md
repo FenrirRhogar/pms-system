@@ -21,7 +21,6 @@ A full-stack, microservices-based web application designed for efficient project
 - **Comments:** Real-time collaboration on tasks.
 - **Database Management:**
   - **Self-Hosted PostgreSQL:** No external dependencies.
-  - **NocoDB Integration:** Provides a spreadsheet-like UI for direct database management and inspection.
 
 ## Technology Stack
 
