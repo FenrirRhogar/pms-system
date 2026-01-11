@@ -4,7 +4,8 @@ backend/.env
 frontend/.env.local
 
 # Python
-backend/__pycache__/
+__pycache__/
+*.py[cod]
 
 # Node
 frontend/node_modules/
