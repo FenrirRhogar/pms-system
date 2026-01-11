@@ -136,12 +136,12 @@ export default function MyTasksPage() {
       </div>
 
       {/* Visualizations Section */}
-      <div className="charts-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '30px' }}>
+      <div className="charts-container">
         
         {/* Status Chart */}
-        <div className="chart-card" style={{ flex: 1, minWidth: '300px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <div className="chart-card">
           <h3>Task Status Distribution</h3>
-          <div style={{ width: '100%', height: 250 }}>
+          <div className="chart-wrapper">
             <ResponsiveContainer>
               <PieChart>
                 <Pie
@@ -157,7 +157,10 @@ export default function MyTasksPage() {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+                  itemStyle={{ color: 'var(--color-text)' }}
+                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
@@ -165,15 +168,19 @@ export default function MyTasksPage() {
         </div>
 
         {/* Priority Chart */}
-        <div className="chart-card" style={{ flex: 1, minWidth: '300px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+        <div className="chart-card">
           <h3>Tasks by Priority</h3>
-          <div style={{ width: '100%', height: 250 }}>
+          <div className="chart-wrapper">
             <ResponsiveContainer>
               <BarChart data={priorityData}>
-                <XAxis dataKey="name" />
-                <YAxis allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#8884d8">
+                <XAxis dataKey="name" stroke="var(--color-text-secondary)" fontSize={12} />
+                <YAxis allowDecimals={false} stroke="var(--color-text-secondary)" fontSize={12} />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(var(--color-brown-600-rgb), 0.05)' }}
+                  contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+                  itemStyle={{ color: 'var(--color-text)' }}
+                />
+                <Bar dataKey="value">
                   {priorityData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
