@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { 
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer 
+} from 'recharts';
 import api from '../api';
 import CommentsList from '../components/CommentsList';
 import CommentForm from '../components/CommentForm';
 import '../styles/TasksPage.css';
+import '../styles/Charts.css';
 
 export default function TasksPage() {
   const { teamId } = useParams();
@@ -127,33 +131,53 @@ export default function TasksPage() {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'URGENT':
-        return '#FF6B6B';
-      case 'HIGH':
-        return '#FFA500';
-      case 'MEDIUM':
-        return '#4ECDC4';
-      case 'LOW':
-        return '#95E1D3';
-      default:
-        return '#999';
+      case 'URGENT': return '#FF6B6B';
+      case 'HIGH': return '#FFA500';
+      case 'MEDIUM': return '#4ECDC4';
+      case 'LOW': return '#95E1D3';
+      default: return '#999';
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'TODO':
-        return '#999';
-      case 'IN_PROGRESS':
-        return '#FFD93D';
-      case 'COMPLETED':
-        return '#6BCF7F';
-      case 'ON_HOLD':
-        return '#FF6B6B';
-      default:
-        return '#999';
+      case 'TODO': return '#999';
+      case 'IN_PROGRESS': return '#FFD93D';
+      case 'COMPLETED': return '#6BCF7F';
+      case 'ON_HOLD': return '#FF6B6B';
+      default: return '#999';
     }
   };
+
+  // Prepare Chart Data
+  const getStatusData = () => {
+    const counts = { TODO: 0, IN_PROGRESS: 0, COMPLETED: 0, ON_HOLD: 0 };
+    tasks.forEach(t => {
+      if (counts[t.status] !== undefined) counts[t.status]++;
+    });
+    return [
+      { name: 'To Do', value: counts.TODO, color: '#999' },
+      { name: 'In Progress', value: counts.IN_PROGRESS, color: '#FFD93D' },
+      { name: 'Completed', value: counts.COMPLETED, color: '#6BCF7F' },
+      { name: 'On Hold', value: counts.ON_HOLD, color: '#FF6B6B' },
+    ].filter(d => d.value > 0);
+  };
+
+  const getPriorityData = () => {
+    const counts = { URGENT: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+    tasks.forEach(t => {
+      if (counts[t.priority] !== undefined) counts[t.priority]++;
+    });
+    return [
+      { name: 'Urgent', value: counts.URGENT, color: '#FF6B6B' },
+      { name: 'High', value: counts.HIGH, color: '#FFA500' },
+      { name: 'Medium', value: counts.MEDIUM, color: '#4ECDC4' },
+      { name: 'Low', value: counts.LOW, color: '#95E1D3' },
+    ];
+  };
+
+  const statusData = getStatusData();
+  const priorityData = getPriorityData();
 
   if (loading) return <div className="loading">Loading tasks...</div>;
 
@@ -172,6 +196,61 @@ export default function TasksPage() {
           </button>
         )}
       </div>
+
+      {/* Visualizations Section */}
+      {tasks.length > 0 && (
+        <div className="charts-container" style={{ marginBottom: '30px' }}>
+          <div className="chart-card">
+            <h3>Status Overview</h3>
+            <div className="chart-wrapper">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+                    itemStyle={{ color: 'var(--color-text)' }}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="chart-card">
+            <h3>Priority Levels</h3>
+            <div className="chart-wrapper">
+              <ResponsiveContainer>
+                <BarChart data={priorityData}>
+                  <XAxis dataKey="name" stroke="var(--color-text-secondary)" fontSize={12} />
+                  <YAxis allowDecimals={false} stroke="var(--color-text-secondary)" fontSize={12} />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(var(--color-brown-600-rgb), 0.05)' }}
+                    contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+                    itemStyle={{ color: 'var(--color-text)' }}
+                  />
+                  <Bar dataKey="value" fill="var(--color-primary)" radius={[4, 4, 0, 0]}>
+                    {priorityData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showCreateForm && (
         <div className="create-task-form">

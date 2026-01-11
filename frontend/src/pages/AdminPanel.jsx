@@ -307,8 +307,35 @@ const handleClearFilters = () => {
     ].filter(d => d.value > 0);
   };
 
+  const getGlobalTaskStatusData = () => {
+    const counts = { TODO: 0, IN_PROGRESS: 0, COMPLETED: 0, ON_HOLD: 0 };
+    allTasks.forEach(t => {
+      if (counts[t.status] !== undefined) counts[t.status]++;
+    });
+    return [
+      { name: 'To Do', value: counts.TODO, color: '#999' },
+      { name: 'In Progress', value: counts.IN_PROGRESS, color: '#FFD93D' },
+      { name: 'Completed', value: counts.COMPLETED, color: '#6BCF7F' },
+      { name: 'On Hold', value: counts.ON_HOLD, color: '#FF6B6B' },
+    ].filter(d => d.value > 0);
+  };
+
+  const getTasksPerTeamData = () => {
+    const teamCounts = {};
+    allTasks.forEach(t => {
+      teamCounts[t.team_name] = (teamCounts[t.team_name] || 0) + 1;
+    });
+    return Object.entries(teamCounts).map(([name, count]) => ({
+      name,
+      tasks: count,
+      color: '#4ECDC4'
+    })).sort((a, b) => b.tasks - a.tasks).slice(0, 10);
+  };
+
   const userRoleData = getUserRoleData();
   const userStatusData = getUserStatusData();
+  const globalTaskStatusData = getGlobalTaskStatusData();
+  const tasksPerTeamData = getTasksPerTeamData();
 
 
   if (loading) return <div className="loading">Loading admin panel...</div>;
@@ -582,6 +609,60 @@ const handleClearFilters = () => {
       {/* Tasks Tab */}
 {!tabLoading && activeTab === 'tasks' && (
   <div className="admin-content">
+    
+    {/* Charts for Tasks */}
+    <div className="charts-container" style={{ marginBottom: '30px' }}>
+      <div className="chart-card">
+        <h3>Global Task Status</h3>
+        <div className="chart-wrapper">
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie
+                data={globalTaskStatusData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {globalTaskStatusData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip 
+                contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+                itemStyle={{ color: 'var(--color-text)' }}
+              />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="chart-card">
+        <h3>Tasks per Team</h3>
+        <div className="chart-wrapper">
+          <ResponsiveContainer>
+            <BarChart data={tasksPerTeamData}>
+              <XAxis dataKey="name" stroke="var(--color-text-secondary)" fontSize={12} />
+              <YAxis allowDecimals={false} stroke="var(--color-text-secondary)" fontSize={12} />
+              <Tooltip 
+                cursor={{ fill: 'rgba(var(--color-brown-600-rgb), 0.05)' }}
+                contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+                itemStyle={{ color: 'var(--color-text)' }}
+              />
+              <Bar dataKey="tasks" fill="var(--color-primary)" radius={[4, 4, 0, 0]}>
+                {tasksPerTeamData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
       <h2 style={{ margin: 0 }}>All Tasks</h2>
       <button
