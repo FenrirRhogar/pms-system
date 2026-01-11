@@ -14,12 +14,13 @@ A full-stack, microservices-based web application designed for efficient project
     - **Team Leader:** Manages their specific team, adds members, creates tasks. Limited to leading one team.
     - **Member:** View and update assigned tasks.
 - **Admin Panel:** Dashboard for activating users, managing roles, and overseeing system status.
-- **Interactive UI:**
-  - **Dynamic Configuration:** Frontend automatically detects the API URL, allowing seamless deployment on Localhost or Google Cloud without code changes.
-  - **Task Management:** Create, assign, update priority/status, and set due dates.
-  - **Comments:** Real-time collaboration on tasks.
+- **Interactive UI with Visualizations:**
+  - **Dynamic Charts:** Visual overview of task status, priority distribution, and user roles using interactive charts (Recharts).
+  - **Dashboard:** "My Tasks" view with personalized statistics.
+- **Task Management:** Create, assign, update priority/status, and set due dates.
+- **Comments:** Real-time collaboration on tasks.
 - **Database Management:**
-  - **Self-Hosted PostgreSQL:** No external dependencies (replaced Supabase).
+  - **Self-Hosted PostgreSQL:** No external dependencies.
   - **NocoDB Integration:** Provides a spreadsheet-like UI for direct database management and inspection.
 
 ## Technology Stack
@@ -34,7 +35,8 @@ A full-stack, microservices-based web application designed for efficient project
 ### Frontend
 - **Framework:** React.js
 - **Routing:** React Router DOM
-- **HTTP Client:** Axios (with smart interceptors for auth handling)
+- **Charts:** Recharts
+- **HTTP Client:** Axios
 - **Styling:** CSS3 with a teal-based theme and responsive design
 
 ### DevOps & Infrastructure
@@ -115,7 +117,7 @@ This project is optimized for deployment on a standard Linux VM (e.g., e2-medium
 5.  **Disk Space Management:** If you deploy frequently, clean up old Docker artifacts to prevent disk space issues:
     ```bash
     docker system prune -a -f
-    docker volume prune -f  # Use with caution (removes unused volumes)
+    docker volume prune -f
     ```
 
 ## Project Structure
@@ -129,7 +131,7 @@ pms-system/
 │   └── task-service/     # Tasks, Comments
 ├── frontend/             # React application
 │   ├── public/           # Icons (favicon.svg) and static assets
-│   └── src/              # React components and pages
-├── docker-compose.yml    # Full stack orchestration (Services + DB + NocoDB)
+│   └── src/              # React components, pages, charts
+├── docker-compose.yml    # Full stack orchestration
 └── README.md
 ```
