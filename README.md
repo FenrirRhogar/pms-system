@@ -21,6 +21,7 @@ A full-stack, microservices-based web application designed for efficient project
 - **Comments:** Real-time collaboration on tasks.
 - **Database Management:**
   - **Self-Hosted PostgreSQL:** No external dependencies.
+  - **NocoDB Integration:** Provides a spreadsheet-like UI for direct database management and inspection.
 
 ## Technology Stack
 
@@ -88,10 +89,6 @@ docker-compose up --build -d
 **Default Admin Credentials:**
 - **Email:** `admin@example.com`
 - **Password:** `adminpassword`
-
-**NocoDB Credentials:**
-- **Email:** `admin@example.com`
-- **Password:** `123456789`
 
 ## Deployment on Google Cloud (GCP)
 
