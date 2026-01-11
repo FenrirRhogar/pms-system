@@ -1,5 +1,8 @@
 import { useNavigate, Link } from 'react-router-dom';
 import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer 
+} from 'recharts';
 import api from '../api';
 import '../styles/MyTasksPage.css';
 
@@ -71,43 +74,54 @@ export default function MyTasksPage() {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'URGENT':
-        return '#FF6B6B';
-      case 'HIGH':
-        return '#FFA500';
-      case 'MEDIUM':
-        return '#4ECDC4';
-      case 'LOW':
-        return '#95E1D3';
-      default:
-        return '#999';
+      case 'URGENT': return '#FF6B6B';
+      case 'HIGH': return '#FFA500';
+      case 'MEDIUM': return '#4ECDC4';
+      case 'LOW': return '#95E1D3';
+      default: return '#999';
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'TODO':
-        return '#999';
-      case 'IN_PROGRESS':
-        return '#FFD93D';
-      case 'COMPLETED':
-        return '#6BCF7F';
-      case 'ON_HOLD':
-        return '#FF6B6B';
-      default:
-        return '#999';
+      case 'TODO': return '#999';
+      case 'IN_PROGRESS': return '#FFD93D';
+      case 'COMPLETED': return '#6BCF7F';
+      case 'ON_HOLD': return '#FF6B6B';
+      default: return '#999';
     }
   };
 
-  const getCompletionStats = () => {
-    const total = tasks.length;
-    const completed = tasks.filter(t => t.status === 'COMPLETED').length;
-    const inProgress = tasks.filter(t => t.status === 'IN_PROGRESS').length;
-    return { total, completed, inProgress };
+  // Prepare Data for Charts
+  const getStatusData = () => {
+    const counts = { TODO: 0, IN_PROGRESS: 0, COMPLETED: 0, ON_HOLD: 0 };
+    tasks.forEach(t => {
+      if (counts[t.status] !== undefined) counts[t.status]++;
+    });
+    return [
+      { name: 'To Do', value: counts.TODO, color: '#999' },
+      { name: 'In Progress', value: counts.IN_PROGRESS, color: '#FFD93D' },
+      { name: 'Completed', value: counts.COMPLETED, color: '#6BCF7F' },
+      { name: 'On Hold', value: counts.ON_HOLD, color: '#FF6B6B' },
+    ].filter(d => d.value > 0);
   };
 
-  const stats = getCompletionStats();
-  
+  const getPriorityData = () => {
+    const counts = { URGENT: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
+    tasks.forEach(t => {
+      if (counts[t.priority] !== undefined) counts[t.priority]++;
+    });
+    return [
+      { name: 'Urgent', value: counts.URGENT, color: '#FF6B6B' },
+      { name: 'High', value: counts.HIGH, color: '#FFA500' },
+      { name: 'Medium', value: counts.MEDIUM, color: '#4ECDC4' },
+      { name: 'Low', value: counts.LOW, color: '#95E1D3' },
+    ];
+  };
+
+  const statusData = getStatusData();
+  const priorityData = getPriorityData();
+
   if (loading) return <div className="loading">Loading your tasks...</div>;
 
   return (
@@ -121,23 +135,52 @@ export default function MyTasksPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-number">{stats.total}</div>
-          <div className="stat-label">Total Tasks</div>
+      {/* Visualizations Section */}
+      <div className="charts-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '30px' }}>
+        
+        {/* Status Chart */}
+        <div className="chart-card" style={{ flex: 1, minWidth: '300px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <h3>Task Status Distribution</h3>
+          <div style={{ width: '100%', height: 250 }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie
+                  data={statusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {statusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-number">{stats.inProgress}</div>
-          <div className="stat-label">In Progress</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{stats.completed}</div>
-          <div className="stat-label">Completed</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{stats.total - stats.completed}</div>
-          <div className="stat-label">Remaining</div>
+
+        {/* Priority Chart */}
+        <div className="chart-card" style={{ flex: 1, minWidth: '300px', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <h3>Tasks by Priority</h3>
+          <div style={{ width: '100%', height: 250 }}>
+            <ResponsiveContainer>
+              <BarChart data={priorityData}>
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="value" fill="#8884d8">
+                  {priorityData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
@@ -165,7 +208,7 @@ export default function MyTasksPage() {
         </div>
       </div>
 
-      {/* Tasks */}
+      {/* Tasks List */}
       <div className="tasks-list">
         {filteredTasks.length > 0 ? (
           filteredTasks.map(task => (
@@ -215,24 +258,23 @@ export default function MyTasksPage() {
               </div>
 
               <div className="task-actions">
-  <select
-    value={task.status}
-    onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value)}
-    className="status-select"
-  >
-    <option value="TODO">To Do</option>
-    <option value="IN_PROGRESS">In Progress</option>
-    <option value="COMPLETED">Completed</option>
-    <option value="ON_HOLD">On Hold</option>
-  </select>
-  <button
-    className="btn-view-details"
-    onClick={() => navigate(`/teams/${task.team_id}/tasks/${task.id}`)}
-  >
-    View Details
-  </button>
-</div>
-
+                <select
+                  value={task.status}
+                  onChange={(e) => handleUpdateTaskStatus(task.id, e.target.value)}
+                  className="status-select"
+                >
+                  <option value="TODO">To Do</option>
+                  <option value="IN_PROGRESS">In Progress</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="ON_HOLD">On Hold</option>
+                </select>
+                <button
+                  className="btn-view-details"
+                  onClick={() => navigate(`/teams/${task.team_id}/tasks/${task.id}`)}
+                >
+                  View Details
+                </button>
+              </div>
             </div>
           ))
         ) : (
