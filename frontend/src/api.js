@@ -1,6 +1,20 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost';
+// Automatically detect the API URL based on the current browser location
+// If running locally or env var is set, use that. Otherwise, assume API is on port 80 of the same host.
+const getBaseUrl = () => {
+  if (process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL !== 'http://localhost') {
+    return process.env.REACT_APP_API_URL;
+  }
+  // If we are on localhost, assume local dev environment
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost'; // Gateway is on port 80
+  }
+  // Otherwise (e.g. GCP IP), use the current hostname but port 80 (default http port)
+  return `http://${window.location.hostname}`;
+};
+
+const API_BASE_URL = getBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
