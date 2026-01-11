@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer 
+} from 'recharts';
 import api from '../api';
 import '../styles/TeamDetailsPage.css';
+import '../styles/Charts.css';
 
 export default function TeamDetailsPage() {
   const { teamId } = useParams();
@@ -203,6 +207,46 @@ export default function TeamDetailsPage() {
     }
   };
 
+  // Prepare Chart Data
+  const getTaskStatusData = () => {
+    const counts = { TODO: 0, IN_PROGRESS: 0, COMPLETED: 0, ON_HOLD: 0 };
+    tasks.forEach(t => {
+      if (counts[t.status] !== undefined) counts[t.status]++;
+    });
+    return [
+      { name: 'To Do', value: counts.TODO, color: '#999' },
+      { name: 'In Progress', value: counts.IN_PROGRESS, color: '#FFD93D' },
+      { name: 'Completed', value: counts.COMPLETED, color: '#6BCF7F' },
+      { name: 'On Hold', value: counts.ON_HOLD, color: '#FF6B6B' },
+    ].filter(d => d.value > 0);
+  };
+
+  const getTasksPerMemberData = () => {
+    if (!team || !team.members) return [];
+    
+    // Initialize with 0 for all members
+    const memberCounts = {};
+    team.members.forEach(m => memberCounts[m.id] = { name: m.username, count: 0 });
+    
+    // Also include tasks assigned to users who might have left the team or are just IDs
+    tasks.forEach(t => {
+      if (t.assigned_to) {
+        if (memberCounts[t.assigned_to]) {
+          memberCounts[t.assigned_to].count++;
+        }
+      }
+    });
+
+    return Object.values(memberCounts).map(m => ({
+      name: m.name,
+      tasks: m.count,
+      color: '#4ECDC4'
+    })).filter(m => m.tasks > 0).sort((a, b) => b.tasks - a.tasks).slice(0, 10);
+  };
+
+  const taskStatusData = getTaskStatusData();
+  const tasksPerMemberData = getTasksPerMemberData();
+
   if (loading) return <div className="loading">Loading team details...</div>;
   if (!team) return <div className="error-message">Team not found</div>;
 
@@ -270,6 +314,61 @@ export default function TeamDetailsPage() {
           </form>
         )}
       </div>
+
+      {/* Visualizations Section */}
+      {tasks.length > 0 && (
+        <div className="charts-container" style={{ marginBottom: '40px' }}>
+          <div className="chart-card">
+            <h3>Task Status</h3>
+            <div className="chart-wrapper">
+              <ResponsiveContainer>
+                <PieChart>
+                  <Pie
+                    data={taskStatusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {taskStatusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+                    itemStyle={{ color: 'var(--color-text)' }}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="chart-card">
+            <h3>Tasks per Member</h3>
+            <div className="chart-wrapper">
+              <ResponsiveContainer>
+                <BarChart data={tasksPerMemberData} layout="vertical">
+                  <XAxis type="number" allowDecimals={false} stroke="var(--color-text-secondary)" fontSize={12} />
+                  <YAxis dataKey="name" type="category" width={100} stroke="var(--color-text-secondary)" fontSize={12} />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(var(--color-brown-600-rgb), 0.05)' }}
+                    contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+                    itemStyle={{ color: 'var(--color-text)' }}
+                  />
+                  <Bar dataKey="tasks" fill="var(--color-primary)" radius={[0, 4, 4, 0]}>
+                    {tasksPerMemberData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tasks Section */}
       <div className="tasks-section">

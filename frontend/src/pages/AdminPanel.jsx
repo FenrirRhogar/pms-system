@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { 
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis
+} from 'recharts';
 import api from '../api';
 import '../styles/AdminPanel.css';
+import '../styles/Charts.css';
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -278,6 +282,34 @@ const handleClearFilters = () => {
   setFilterDueBy('');
 };
 
+  // Prepare Chart Data
+  const getUserRoleData = () => {
+    const counts = { ADMIN: 0, TEAM_LEADER: 0, MEMBER: 0 };
+    users.forEach(u => {
+      if (counts[u.role] !== undefined) counts[u.role]++;
+    });
+    return [
+      { name: 'Admin', value: counts.ADMIN, color: '#FF6B6B' },
+      { name: 'Team Leader', value: counts.TEAM_LEADER, color: '#FFD93D' },
+      { name: 'Member', value: counts.MEMBER, color: '#4ECDC4' },
+    ].filter(d => d.value > 0);
+  };
+
+  const getUserStatusData = () => {
+    const counts = { Active: 0, Inactive: 0 };
+    users.forEach(u => {
+      if (u.is_active) counts.Active++;
+      else counts.Inactive++;
+    });
+    return [
+      { name: 'Active', value: counts.Active, color: '#6BCF7F' },
+      { name: 'Inactive', value: counts.Inactive, color: '#999' },
+    ].filter(d => d.value > 0);
+  };
+
+  const userRoleData = getUserRoleData();
+  const userStatusData = getUserStatusData();
+
 
   if (loading) return <div className="loading">Loading admin panel...</div>;
 
@@ -318,6 +350,66 @@ const handleClearFilters = () => {
       {/* Users Tab */}
       {!tabLoading && activeTab === 'users' && (
         <div className="admin-content">
+          
+          {/* Charts for Users */}
+          <div className="charts-container">
+            <div className="chart-card">
+              <h3>User Roles</h3>
+              <div className="chart-wrapper">
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={userRoleData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {userRoleData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+                      itemStyle={{ color: 'var(--color-text)' }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            
+            <div className="chart-card">
+              <h3>User Status</h3>
+              <div className="chart-wrapper">
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={userStatusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {userStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+                      itemStyle={{ color: 'var(--color-text)' }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+
           <div className="users-grid">
             {users.map((user) => (
               <div key={user.id} className="user-card">
