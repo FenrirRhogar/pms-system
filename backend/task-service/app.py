@@ -1,16 +1,19 @@
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from database import get_db, engine
-from db_models import Task, Comment, User, Team
+from db_models import Task, Comment, User, Team, Attachment
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
 import os
+import shutil
+from pathlib import Path
 from dotenv import load_dotenv
 import jwt
 from datetime import datetime, timedelta
 from models import (
     UserResponse, TaskCreate, TaskUpdate, TaskResponse, TaskDetailResponse,
-    CommentCreate, CommentUpdate, CommentResponse
+    CommentCreate, CommentUpdate, CommentResponse, AttachmentResponse
 )
 from db_models import Base
 from sqlalchemy.exc import OperationalError
@@ -54,6 +57,8 @@ app.add_middleware(
 
 JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key")
 ALGORITHM = "HS256"
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
 
 # ============ HELPER FUNCTIONS ============
 
@@ -290,6 +295,17 @@ async def get_task_details(task_id: str, token: str = None, db: Session = Depend
                 user=comment_user
             ))
 
+        # Fetch attachments
+        attachments = []
+        for att in task.attachments:
+            attachments.append(AttachmentResponse(
+                id=str(att.id),
+                task_id=str(att.task_id),
+                uploader_id=str(att.uploader_id),
+                filename=att.filename,
+                file_path=att.file_path,
+                created_at=att.created_at
+            ))
 
         return TaskDetailResponse(
             id=str(task.id),
@@ -305,7 +321,8 @@ async def get_task_details(task_id: str, token: str = None, db: Session = Depend
             due_date=task.due_date,
             created_at=task.created_at,
             updated_at=task.updated_at,
-            comments=comments
+            comments=comments,
+            attachments=attachments
         )
     except HTTPException:
         raise
@@ -616,7 +633,86 @@ async def delete_comment(comment_id: str, token: str = None, db: Session = Depen
         print(f"Error deleting comment: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to delete comment")
 
+# ============ ATTACHMENTS ENDPOINTS ============
 
+@app.post("/api/tasks/{task_id}/attachments", response_model=AttachmentResponse)
+async def upload_attachment(
+    task_id: str,
+    file: UploadFile = File(...),
+    token: str = None,
+    db: Session = Depends(get_db)
+):
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    user_id = verify_token(token)
+    
+    try:
+        # Verify task existence
+        task = db.query(Task).filter(Task.id == task_id).first()
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+            
+        # Generate unique filename to prevent collisions
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        safe_filename = f"{timestamp}_{file.filename}"
+        file_location = UPLOAD_DIR / safe_filename
+        
+        # Save file to disk
+        with file_location.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        # Save metadata to DB
+        attachment = Attachment(
+            task_id=task_id,
+            uploader_id=user_id,
+            filename=file.filename,
+            file_path=str(file_location),
+            created_at=datetime.utcnow()
+        )
+        db.add(attachment)
+        db.commit()
+        db.refresh(attachment)
+        
+        return AttachmentResponse(
+            id=str(attachment.id),
+            task_id=str(attachment.task_id),
+            uploader_id=str(attachment.uploader_id),
+            filename=attachment.filename,
+            file_path=attachment.file_path,
+            created_at=attachment.created_at
+        )
+    except Exception as e:
+        db.rollback()
+        print(f"Error uploading file: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to upload file")
+
+@app.get("/api/attachments/{attachment_id}/download")
+async def download_attachment(attachment_id: str, token: str = None, db: Session = Depends(get_db)):
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+        
+    verify_token(token)
+    
+    try:
+        attachment = db.query(Attachment).filter(Attachment.id == attachment_id).first()
+        if not attachment:
+            raise HTTPException(status_code=404, detail="Attachment not found")
+            
+        file_path = Path(attachment.file_path)
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File not found on server")
+            
+        return FileResponse(
+            path=file_path,
+            filename=attachment.filename,
+            media_type="application/octet-stream"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error downloading file: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to download file")
 
 if __name__ == "__main__":
     import uvicorn

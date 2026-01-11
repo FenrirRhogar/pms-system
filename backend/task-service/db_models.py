@@ -67,6 +67,7 @@ class Task(Base):
     creator = relationship("User", foreign_keys=[created_by], back_populates="tasks_created")
     assignee = relationship("User", foreign_keys=[assigned_to], back_populates="tasks_assigned")
     comments = relationship("Comment", back_populates="task", cascade="all, delete-orphan")
+    attachments = relationship("Attachment", back_populates="task", cascade="all, delete-orphan")
 
 class Comment(Base):
     __tablename__ = "task_comments"
@@ -80,3 +81,16 @@ class Comment(Base):
 
     task = relationship("Task", back_populates="comments")
     user = relationship("User", back_populates="comments")
+
+class Attachment(Base):
+    __tablename__ = "attachments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    task_id = Column(UUID(as_uuid=True), ForeignKey("tasks.id"))
+    uploader_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    filename = Column(String, nullable=False)
+    file_path = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    task = relationship("Task", back_populates="attachments")
+    uploader = relationship("User")

@@ -28,6 +28,16 @@ class CommentResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+# ============ ATTACHMENTS ============
+
+class AttachmentResponse(BaseModel):
+    id: str
+    task_id: str
+    uploader_id: str
+    filename: str
+    file_path: str
+    created_at: datetime
+
 # ============ TASKS ============
 
 class TaskCreate(BaseModel):
@@ -74,3 +84,4 @@ class TaskDetailResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     comments: Optional[List[CommentResponse]] = []
+    attachments: Optional[List[AttachmentResponse]] = []

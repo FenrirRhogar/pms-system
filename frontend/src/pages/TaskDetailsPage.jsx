@@ -1,5 +1,3 @@
-// frontend/src/pages/TaskDetailsPage.jsx
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -14,6 +12,7 @@ export default function TaskDetailsPage() {
   const user = JSON.parse(localStorage.getItem('user'));
 
   const [task, setTask] = useState(null);
+  const [attachments, setAttachments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editMode, setEditMode] = useState(false);
@@ -23,6 +22,7 @@ export default function TaskDetailsPage() {
     status: '',
     priority: ''
   });
+  const [uploading, setUploading] = useState(false);
 
   const fetchTask = useCallback(async () => {
     try {
@@ -30,6 +30,7 @@ export default function TaskDetailsPage() {
       const response = await api.get(`/api/tasks/${taskId}/details`);
 
       setTask(response.data);
+      setAttachments(response.data.attachments || []);
       setFormData({
         title: response.data.title,
         description: response.data.description,
@@ -82,6 +83,52 @@ export default function TaskDetailsPage() {
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      setUploading(true);
+      await api.post(`/api/tasks/${taskId}/attachments`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      fetchTask(); // Refresh task to get new attachment list
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to upload file');
+    } finally {
+      setUploading(false);
+      e.target.value = null; // Reset input
+    }
+  };
+
+  const handleDownload = async (attachmentId, filename) => {
+    try {
+        const response = await api.get(`/api/attachments/${attachmentId}/download`, {
+            responseType: 'blob',
+        });
+        
+        // Create a URL for the blob
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        
+        // Cleanup
+        link.parentNode.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error("Download failed:", err);
+        setError('Failed to download file');
+    }
+  };
+
   const getPriorityColor = (priority) => {
     switch (priority) {
       case 'URGENT':
@@ -114,10 +161,16 @@ export default function TaskDetailsPage() {
 
   const canEdit = user && user.role === 'TEAM_LEADER';
 
-const canChangeStatus = user && (
-  user.id === task?.assigned_to ||
-  user.role === 'TEAM_LEADER'
-);
+  const canChangeStatus = user && (
+    user.id === task?.assigned_to ||
+    user.role === 'TEAM_LEADER'
+  );
+
+  const canUpload = user && (
+    user.id === task?.assigned_to || 
+    user.role === 'TEAM_LEADER' || 
+    user.role === 'ADMIN'
+  );
 
   if (loading) return <div className="loading">Loading task...</div>;
 
@@ -282,6 +335,46 @@ const canChangeStatus = user && (
             </div>
           </div>
         )}
+
+        {/* Attachments Section */}
+        <div className="task-details-section">
+          <h2>Attachments</h2>
+          <div className="attachments-list">
+            {attachments.length > 0 ? (
+              attachments.map((file) => (
+                <div key={file.id} className="attachment-item">
+                  <span className="attachment-icon">📎</span>
+                  <div className="attachment-info">
+                    <span className="attachment-name">{file.filename}</span>
+                    <span className="attachment-date">{new Date(file.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <button 
+                    className="btn-download"
+                    onClick={() => handleDownload(file.id, file.filename)}
+                  >
+                    Download
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="no-attachments">No attachments yet.</p>
+            )}
+          </div>
+
+          {canUpload && (
+            <div className="upload-container">
+              <label className="btn-upload">
+                {uploading ? 'Uploading...' : '+ Upload File'}
+                <input 
+                  type="file" 
+                  onChange={handleFileUpload} 
+                  disabled={uploading}
+                  style={{ display: 'none' }} 
+                />
+              </label>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Comments Section */}
