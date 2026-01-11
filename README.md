@@ -51,8 +51,6 @@ The system exposes only two ports to the outside world:
 1.  **Frontend (Port 3000):** The React User Interface.
 2.  **API Gateway (Port 80):** Nginx reverse proxy that routes requests to internal services.
 
-Internal services (User: 8080, Team: 8081, Task: 8082) are hidden inside the Docker network.
-
 ## Getting Started
 
 ### Prerequisites
@@ -104,16 +102,15 @@ This project is optimized for deployment on a standard Linux VM (e.g., e2-medium
 2.  **Firewall Rules:** Ensure specific ports are open in the VPC network:
     - `TCP: 3000` (Frontend)
     - `TCP: 80` (API Gateway)
-    - `TCP: 8083` (NocoDB - Optional)
 3.  **Setup Server:** SSH into the VM and install Docker & Git.
 4.  **Deploy:**
     ```bash
-    git clone <repo_url>
+    git clone https://github.com/FenrirRhogar/pms-system.git
     cd pms-system
     echo "JWT_SECRET=supersecret" > .env
     docker-compose up -d --build
     ```
-5.  **Disk Space Management:** If you deploy frequently, clean up old Docker artifacts to prevent disk space issues:
+5.  **Disk Space Management:** If you deploy frequently, clean up old Docker artifacts to prevent disk space issues (this problem occured due to low disk space in the GCP):
     ```bash
     docker system prune -a -f
     docker volume prune -f
