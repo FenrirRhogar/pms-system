@@ -59,10 +59,24 @@ def seed_admin():
             db.commit()
     except Exception as e:
         print(f"Error seeding admin: {e}")
+        raise e # Re-raise to trigger retry
     finally:
         db.close()
 
-seed_admin()
+def safe_seed_admin():
+    retries = 0
+    while retries < 5:
+        try:
+            seed_admin()
+            print("Admin seeding completed.")
+            return
+        except Exception:
+            retries += 1
+            print(f"Admin seeding failed. Retrying {retries}/5...")
+            time.sleep(2)
+    print("Failed to seed admin after multiple attempts.")
+
+safe_seed_admin()
 
 # Initialize FastAPI
 app = FastAPI(title="User Service")
